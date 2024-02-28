@@ -1,11 +1,11 @@
-#include "first_app.hpp"
+#include "app.hpp"
 
 #include <cstdlib>
 #include <exception>
 #include <iostream>
 
 int main() {
-  vlkn::FirstApp app{};
+  vlkn::App app{};
 
   try {
     app.run();

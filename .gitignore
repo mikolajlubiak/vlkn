@@ -1,1 +1,3 @@
-vlkn
+shaders/*.spv
+debug
+release
