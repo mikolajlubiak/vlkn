@@ -2,7 +2,7 @@ CXXFLAGS := -Wall -Wextra -pedantic
 LDFLAGS = -lglfw -lvulkan
 
 DEBUGFLAGS := --debug
-RELEASEFLAGS := -O3 -march=native -mtune=native
+RELEASEFLAGS := -O3 -march=native -mtune=native -DNDEBUG
 
 all: shaders/*.spv debug
 

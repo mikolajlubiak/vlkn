@@ -2,7 +2,9 @@
 #include <GLFW/glfw3.h>
 
 #include <cstdint>
+#include <stdexcept>
 #include <string>
+#include <vulkan/vulkan_core.h>
 
 namespace vlkn {
 
@@ -24,6 +26,14 @@ void VlknWindow::initWindow() {
 
   window =
       glfwCreateWindow(width, height, windowName.c_str(), nullptr, nullptr);
+}
+
+void VlknWindow::createWindowSurface(VkInstance instance,
+                                     VkSurfaceKHR *surface) {
+  if (glfwCreateWindowSurface(instance, window, nullptr, surface) !=
+      VK_SUCCESS) {
+    throw std::runtime_error("failed to create window surface");
+  }
 }
 
 } // namespace vlkn
