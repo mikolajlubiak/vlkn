@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vlkn_device.hpp"
+#include "vlkn_model.hpp"
 #include "vlkn_pipeline.hpp"
 #include "vlkn_swap_chain.hpp"
 #include "vlkn_window.hpp"
@@ -26,6 +27,9 @@ public:
   void run();
 
 private:
+  void sierpinski(std::vector<VlknModel::Vertex> &vertices, int depth,
+                  glm::vec2 left, glm::vec2 right, glm::vec2 top);
+  void loadModels();
   void createPipelineLayout();
   void createPipeline();
   void createCommandBuffers();
@@ -36,6 +40,7 @@ private:
   std::unique_ptr<VlknPipeline> vlknPipeline;
   VkPipelineLayout pipelineLayout;
   std::vector<VkCommandBuffer> commandBuffers;
+  std::unique_ptr<VlknModel> vlknModel;
 };
 
 } // namespace vlkn

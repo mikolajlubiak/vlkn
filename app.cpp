@@ -1,18 +1,23 @@
 #include "app.hpp"
 #include "vlkn_device.hpp"
+#include "vlkn_model.hpp"
 #include "vlkn_pipeline.hpp"
 
 #include <GLFW/glfw3.h>
 #include <array>
 #include <bits/fs_fwd.h>
 #include <cstdint>
+#include <glm/detail/qualifier.hpp>
+#include <glm/fwd.hpp>
 #include <memory>
 #include <stdexcept>
+#include <vector>
 #include <vulkan/vulkan_core.h>
 
 namespace vlkn {
 
 App::App() {
+  loadModels();
   createPipelineLayout();
   createPipeline();
   createCommandBuffers();
@@ -94,7 +99,8 @@ void App::createCommandBuffers() {
                          VK_SUBPASS_CONTENTS_INLINE);
 
     vlknPipeline->bind(commandBuffers[i]);
-    vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
+    vlknModel->bind(commandBuffers[i]);
+    vlknModel->draw(commandBuffers[i]);
 
     vkCmdEndRenderPass(commandBuffers[i]);
 
@@ -117,6 +123,30 @@ void App::drawFrame() {
   if (result != VK_SUCCESS) {
     throw std::runtime_error("failed to submit command buffer");
   }
+}
+
+void App::sierpinski(std::vector<VlknModel::Vertex> &vertices, int depth,
+                     glm::vec2 left, glm::vec2 right, glm::vec2 top) {
+  if (depth <= 0) {
+    vertices.emplace_back(top);
+    vertices.emplace_back(right);
+    vertices.emplace_back(left);
+  } else {
+    glm::vec2 leftTop = 0.5f * (left + top);
+    glm::vec2 rightTop = 0.5f * (right + top);
+    glm::vec2 leftRight = 0.5f * (left + right);
+    sierpinski(vertices, depth - 1, left, leftRight, leftTop);
+    sierpinski(vertices, depth - 1, leftRight, right, rightTop);
+    sierpinski(vertices, depth - 1, leftTop, rightTop, top);
+  }
+}
+
+void App::loadModels() {
+  std::vector<VlknModel::Vertex> vertices;
+  vertices.reserve(5);
+  sierpinski(vertices, 5, {-0.5f, 0.5f}, {0.5f, 0.5f}, {0.0f, -0.5f});
+
+  vlknModel = std::make_unique<VlknModel>(vlknDevice, vertices);
 }
 
 } // namespace vlkn
