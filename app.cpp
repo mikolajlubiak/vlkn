@@ -1,5 +1,6 @@
 #include "app.hpp"
 #include "vlkn_device.hpp"
+#include "vlkn_game_object.hpp"
 #include "vlkn_model.hpp"
 #include "vlkn_pipeline.hpp"
 #include "vlkn_swap_chain.hpp"
@@ -11,6 +12,7 @@
 #include <cstdint>
 #include <glm/detail/qualifier.hpp>
 #include <glm/fwd.hpp>
+#include <glm/gtc/constants.hpp>
 #include <memory>
 #include <stdexcept>
 #include <utility>
@@ -19,8 +21,15 @@
 
 namespace vlkn {
 
+struct PushConstantData {
+  glm::mat2 transform{1.0f};
+  alignas(4) glm::vec2 offset;
+  alignas(16) glm::vec3 color;
+};
+
 App::App() {
-  loadModels();
+  gameObjects.reserve(5);
+  loadGameObjects();
   createPipelineLayout();
   recreateSwapChain();
   createCommandBuffers();
@@ -40,12 +49,19 @@ void App::run() {
 }
 
 void App::createPipelineLayout() {
+
+  VkPushConstantRange pushConstantRange{};
+  pushConstantRange.stageFlags =
+      VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+  pushConstantRange.offset = 0;
+  pushConstantRange.size = sizeof(PushConstantData);
+
   VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
   pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   pipelineLayoutInfo.setLayoutCount = 0;
   pipelineLayoutInfo.pSetLayouts = nullptr;
-  pipelineLayoutInfo.pushConstantRangeCount = 0;
-  pipelineLayoutInfo.pPushConstantRanges = nullptr;
+  pipelineLayoutInfo.pushConstantRangeCount = 1;
+  pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
   if (vkCreatePipelineLayout(vlknDevice.device(), &pipelineLayoutInfo, nullptr,
                              &pipelineLayout) != VK_SUCCESS) {
@@ -125,6 +141,7 @@ void App::drawFrame() {
   }
 
   recordCommandBuffer(imageIndex);
+
   result = vlknSwapChain->submitCommandBuffers(&commandBuffers[imageIndex],
                                                &imageIndex);
 
@@ -161,13 +178,34 @@ void App::sierpinski(std::vector<VlknModel::Vertex> &vertices, int depth,
   }
 }
 
-void App::loadModels() {
-  const uint8_t VERT_COUNT = 1;
-  std::vector<VlknModel::Vertex> vertices;
-  vertices.reserve(VERT_COUNT);
-  sierpinski(vertices, VERT_COUNT, {-0.5f, 0.5f}, {0.5f, 0.5f}, {0.0f, -0.5f},
-             {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f});
-  vlknModel = std::make_unique<VlknModel>(vlknDevice, vertices);
+void App::loadGameObjects() {
+  std::vector<VlknModel::Vertex> vertices{{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+                                          {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+                                          {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
+
+  std::shared_ptr<VlknModel> vlknModel =
+      std::make_shared<VlknModel>(vlknDevice, vertices);
+
+  std::vector<glm::vec3> colors{
+      {1.f, .7f, .73f},
+      {1.f, .87f, .73f},
+      {1.f, 1.f, .73f},
+      {.73f, 1.f, .8f},
+      {.73, .88f, 1.f} //
+  };
+
+  for (glm::vec3 &color : colors) {
+    color = glm::pow(color, glm::vec3{2.2f});
+  }
+
+  for (int i = 0; i < 40; i++) {
+    auto triangle = VlknGameObject::createGameObject();
+    triangle.model = vlknModel;
+    triangle.transform2D.scale = glm::vec2(.5f) + i * 0.025f;
+    triangle.transform2D.rotation = i * glm::pi<float>() * .025f;
+    triangle.color = colors[i % colors.size()];
+    gameObjects.push_back(std::move(triangle));
+  }
 }
 
 void App::recordCommandBuffer(uint32_t imageIndex) {
@@ -209,14 +247,38 @@ void App::recordCommandBuffer(uint32_t imageIndex) {
   vkCmdSetViewport(commandBuffers[imageIndex], 0, 1, &viewport);
   vkCmdSetScissor(commandBuffers[imageIndex], 0, 1, &scissor);
 
-  vlknPipeline->bind(commandBuffers[imageIndex]);
-  vlknModel->bind(commandBuffers[imageIndex]);
-  vlknModel->draw(commandBuffers[imageIndex]);
+  renderGameObjects(commandBuffers[imageIndex]);
 
   vkCmdEndRenderPass(commandBuffers[imageIndex]);
 
   if (vkEndCommandBuffer(commandBuffers[imageIndex]) != VK_SUCCESS) {
     throw std::runtime_error("failed to record command buffer");
+  }
+}
+
+void App::renderGameObjects(VkCommandBuffer commandBuffer) {
+
+  int i = 0;
+  for (VlknGameObject &obj : gameObjects) {
+    i += 1;
+    obj.transform2D.rotation = glm::mod<float>(
+        obj.transform2D.rotation + 0.00005f * i, 2.f * glm::pi<float>());
+  }
+
+  vlknPipeline->bind(commandBuffer);
+
+  for (VlknGameObject &obj : gameObjects) {
+    PushConstantData push{};
+    push.offset = obj.transform2D.translation;
+    push.color = obj.color;
+    push.transform = obj.transform2D.mat2();
+
+    vkCmdPushConstants(commandBuffer, pipelineLayout,
+                       VK_SHADER_STAGE_VERTEX_BIT |
+                           VK_SHADER_STAGE_FRAGMENT_BIT,
+                       0, sizeof(PushConstantData), &push);
+    obj.model->bind(commandBuffer);
+    obj.model->draw(commandBuffer);
   }
 }
 

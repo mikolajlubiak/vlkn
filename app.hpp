@@ -1,12 +1,16 @@
 #pragma once
 
 #include "vlkn_device.hpp"
-#include "vlkn_model.hpp"
+#include "vlkn_game_object.hpp"
 #include "vlkn_pipeline.hpp"
 #include "vlkn_swap_chain.hpp"
 #include "vlkn_window.hpp"
 
 #include <cstdint>
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/fwd.hpp>
+#include <glm/glm.hpp>
 #include <memory>
 #include <vector>
 #include <vulkan/vulkan_core.h>
@@ -32,7 +36,7 @@ private:
                   glm::vec3 leftColor, glm::vec3 rightColor,
                   glm::vec3 topColor);
 
-  void loadModels();
+  void loadGameObjects();
   void createPipelineLayout();
   void createPipeline();
   void createCommandBuffers();
@@ -40,6 +44,7 @@ private:
   void drawFrame();
   void recreateSwapChain();
   void recordCommandBuffer(uint32_t imageIndex);
+  void renderGameObjects(VkCommandBuffer commandBuffer);
 
   VlknWindow vlknWindow{WIDTH, HEIGH, "vlkn Demo"};
   VlknDevice vlknDevice{vlknWindow};
@@ -47,7 +52,7 @@ private:
   std::unique_ptr<VlknPipeline> vlknPipeline;
   VkPipelineLayout pipelineLayout;
   std::vector<VkCommandBuffer> commandBuffers;
-  std::unique_ptr<VlknModel> vlknModel;
+  std::vector<VlknGameObject> gameObjects;
 };
 
 } // namespace vlkn
