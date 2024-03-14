@@ -28,7 +28,10 @@ public:
 
 private:
   void sierpinski(std::vector<VlknModel::Vertex> &vertices, int depth,
-                  glm::vec2 left, glm::vec2 right, glm::vec2 top);
+                  glm::vec2 left, glm::vec2 right, glm::vec2 top,
+                  glm::vec3 leftColor, glm::vec3 rightColor,
+                  glm::vec3 topColor);
+
   void loadModels();
   void createPipelineLayout();
   void createPipeline();

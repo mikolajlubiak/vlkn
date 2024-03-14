@@ -30,7 +30,7 @@ public:
   ~VlknPipeline();
 
   VlknPipeline(const VlknPipeline &) = delete;
-  void operator=(const VlknPipeline &) = delete;
+  VlknPipeline &operator=(const VlknPipeline &) = delete;
 
   static PipelineConfigInfo defaultPipelineConfigInfo(uint32_t width,
                                                       uint32_t height);

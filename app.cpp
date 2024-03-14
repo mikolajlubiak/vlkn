@@ -126,26 +126,32 @@ void App::drawFrame() {
 }
 
 void App::sierpinski(std::vector<VlknModel::Vertex> &vertices, int depth,
-                     glm::vec2 left, glm::vec2 right, glm::vec2 top) {
+                     glm::vec2 left, glm::vec2 right, glm::vec2 top,
+                     glm::vec3 leftColor, glm::vec3 rightColor,
+                     glm::vec3 topColor) {
   if (depth <= 0) {
-    vertices.emplace_back(top);
-    vertices.emplace_back(right);
-    vertices.emplace_back(left);
+    vertices.emplace_back(top, topColor);
+    vertices.emplace_back(right, rightColor);
+    vertices.emplace_back(left, leftColor);
   } else {
     glm::vec2 leftTop = 0.5f * (left + top);
     glm::vec2 rightTop = 0.5f * (right + top);
     glm::vec2 leftRight = 0.5f * (left + right);
-    sierpinski(vertices, depth - 1, left, leftRight, leftTop);
-    sierpinski(vertices, depth - 1, leftRight, right, rightTop);
-    sierpinski(vertices, depth - 1, leftTop, rightTop, top);
+    sierpinski(vertices, depth - 1, left, leftRight, leftTop, leftColor,
+               rightColor, topColor);
+    sierpinski(vertices, depth - 1, leftRight, right, rightTop, leftColor,
+               rightColor, topColor);
+    sierpinski(vertices, depth - 1, leftTop, rightTop, top, leftColor,
+               rightColor, topColor);
   }
 }
 
 void App::loadModels() {
+  const uint8_t VERT_COUNT = 1;
   std::vector<VlknModel::Vertex> vertices;
-  vertices.reserve(5);
-  sierpinski(vertices, 5, {-0.5f, 0.5f}, {0.5f, 0.5f}, {0.0f, -0.5f});
-
+  vertices.reserve(VERT_COUNT);
+  sierpinski(vertices, VERT_COUNT, {-0.5f, 0.5f}, {0.5f, 0.5f}, {0.0f, -0.5f},
+             {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f});
   vlknModel = std::make_unique<VlknModel>(vlknDevice, vertices);
 }
 

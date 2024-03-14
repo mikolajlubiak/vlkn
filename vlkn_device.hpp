@@ -32,7 +32,7 @@ public:
   ~VlknDevice();
 
   VlknDevice(const VlknDevice &) = delete;
-  void operator=(const VlknDevice &) = delete;
+  VlknDevice &operator=(const VlknDevice &) = delete;
   VlknDevice(VlknDevice &&) = delete;
   VlknDevice &operator=(VlknDevice &&) = delete;
 
