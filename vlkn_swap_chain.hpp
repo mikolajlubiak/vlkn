@@ -4,6 +4,7 @@
 
 #include <vulkan/vulkan.h>
 
+#include <memory>
 #include <vector>
 
 namespace vlkn {
@@ -13,10 +14,12 @@ public:
   static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
   VlknSwapChain(VlknDevice &deviceRef, VkExtent2D windowExtent);
+  VlknSwapChain(VlknDevice &deviceRef, VkExtent2D windowExtent,
+                std::shared_ptr<VlknSwapChain> previous);
   ~VlknSwapChain();
 
   VlknSwapChain(const VlknSwapChain &) = delete;
-  void operator=(const VlknSwapChain &) = delete;
+  VlknSwapChain &operator=(const VlknSwapChain &) = delete;
 
   VkFramebuffer getFrameBuffer(int index) {
     return swapChainFramebuffers[index];
@@ -40,6 +43,7 @@ public:
                                 uint32_t *imageIndex);
 
 private:
+  void init();
   void createSwapChain();
   void createImageViews();
   void createDepthResources();
@@ -69,6 +73,7 @@ private:
   VkExtent2D windowExtent;
 
   VkSwapchainKHR swapChain;
+  std::shared_ptr<VlknSwapChain> oldSwapChain;
 
   std::vector<VkSemaphore> imageAvailableSemaphores;
   std::vector<VkSemaphore> renderFinishedSemaphores;

@@ -22,10 +22,12 @@ VlknWindow::~VlknWindow() {
 void VlknWindow::initWindow() {
   glfwInit();
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+  glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
   window =
       glfwCreateWindow(width, height, windowName.c_str(), nullptr, nullptr);
+  glfwSetWindowUserPointer(window, this);
+  glfwSetFramebufferSizeCallback(window, framebufferResizedCallback);
 }
 
 void VlknWindow::createWindowSurface(VkInstance instance,
@@ -34,6 +36,15 @@ void VlknWindow::createWindowSurface(VkInstance instance,
       VK_SUCCESS) {
     throw std::runtime_error("failed to create window surface");
   }
+}
+
+void VlknWindow::framebufferResizedCallback(GLFWwindow *window, int width,
+                                            int height) {
+  VlknWindow *vlknWindow =
+      reinterpret_cast<VlknWindow *>(glfwGetWindowUserPointer(window));
+  vlknWindow->framebufferResized = true;
+  vlknWindow->width = static_cast<uint32_t>(width);
+  vlknWindow->height = static_cast<uint32_t>(height);
 }
 
 } // namespace vlkn

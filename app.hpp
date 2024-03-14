@@ -36,10 +36,14 @@ private:
   void createPipelineLayout();
   void createPipeline();
   void createCommandBuffers();
+  void freeCommandBuffers();
   void drawFrame();
+  void recreateSwapChain();
+  void recordCommandBuffer(uint32_t imageIndex);
+
   VlknWindow vlknWindow{WIDTH, HEIGH, "vlkn Demo"};
   VlknDevice vlknDevice{vlknWindow};
-  VlknSwapChain vlknSwapChain{vlknDevice, vlknWindow.getExtent()};
+  std::unique_ptr<VlknSwapChain> vlknSwapChain;
   std::unique_ptr<VlknPipeline> vlknPipeline;
   VkPipelineLayout pipelineLayout;
   std::vector<VkCommandBuffer> commandBuffers;
