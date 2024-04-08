@@ -3,6 +3,7 @@
 #include "vlkn_window.hpp"
 
 #include <vector>
+#include <vulkan/vulkan_core.h>
 
 namespace vlkn {
 

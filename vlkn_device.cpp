@@ -5,6 +5,7 @@
 #include <set>
 #include <string>
 #include <unordered_set>
+#include <vulkan/vulkan_core.h>
 
 namespace vlkn {
 
@@ -324,6 +325,9 @@ std::vector<const char *> VlknDevice::getRequiredExtensions() {
   if (enableValidationLayers) {
     extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
   }
+
+  extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+  extensions.push_back(VK_KHR_EXTERNAL_FENCE_CAPABILITIES_EXTENSION_NAME);
 
   return extensions;
 }
