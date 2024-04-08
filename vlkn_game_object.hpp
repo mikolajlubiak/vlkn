@@ -7,7 +7,7 @@
 
 namespace vlkn {
 
-struct Transform2DComponent {
+struct Transform2dComponent {
   glm::vec2 translation{};
   glm::vec2 scale{1.0f, 1.0f};
   float rotation;
@@ -21,6 +21,11 @@ struct Transform2DComponent {
 
     return rotationMat * scaleMat;
   }
+};
+
+struct RigidBody2dComponent {
+  glm::vec2 velocity;
+  float mass{1.0f};
 };
 
 class VlknGameObject {
@@ -41,7 +46,8 @@ public:
 
   std::shared_ptr<VlknModel> model;
   glm::vec3 color{};
-  Transform2DComponent transform2D{};
+  Transform2dComponent transform2d{};
+  RigidBody2dComponent rigidBody2d{};
 
 private:
   VlknGameObject(id_t objId) : id(objId){};

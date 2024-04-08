@@ -4,7 +4,6 @@
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>
-#include <iostream>
 #include <limits>
 #include <memory>
 #include <stdexcept>
@@ -300,6 +299,7 @@ void VlknSwapChain::createFramebuffers() {
 
 void VlknSwapChain::createDepthResources() {
   VkFormat depthFormat = findDepthFormat();
+  swapChainDepthFormat = depthFormat;
   VkExtent2D swapChainExtent = getSwapChainExtent();
 
   depthImages.resize(imageCount());

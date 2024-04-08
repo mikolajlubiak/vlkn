@@ -1,285 +1,224 @@
 #include "app.hpp"
+#include "render_system.hpp"
 #include "vlkn_device.hpp"
 #include "vlkn_game_object.hpp"
 #include "vlkn_model.hpp"
-#include "vlkn_pipeline.hpp"
-#include "vlkn_swap_chain.hpp"
+#include "vlkn_renderer.hpp"
 
 #include <GLFW/glfw3.h>
-#include <array>
 #include <bits/fs_fwd.h>
-#include <cassert>
 #include <cstdint>
 #include <glm/detail/qualifier.hpp>
 #include <glm/fwd.hpp>
 #include <glm/gtc/constants.hpp>
 #include <memory>
-#include <stdexcept>
 #include <utility>
 #include <vector>
 #include <vulkan/vulkan_core.h>
 
 namespace vlkn {
 
-struct PushConstantData {
-  glm::mat2 transform{1.0f};
-  alignas(4) glm::vec2 offset;
-  alignas(16) glm::vec3 color;
-};
+class GravityPhysicsSystem {
+public:
+  GravityPhysicsSystem(float strength) : strengthGravity{strength} {}
 
-App::App() {
-  gameObjects.reserve(5);
-  loadGameObjects();
-  createPipelineLayout();
-  recreateSwapChain();
-  createCommandBuffers();
-}
+  const float strengthGravity;
 
-App::~App() {
-  vkDestroyPipelineLayout(vlknDevice.device(), pipelineLayout, nullptr);
-}
-
-void App::run() {
-  while (!vlknWindow.shouldClose()) {
-    glfwPollEvents();
-    drawFrame();
-  }
-
-  vkDeviceWaitIdle(vlknDevice.device());
-}
-
-void App::createPipelineLayout() {
-
-  VkPushConstantRange pushConstantRange{};
-  pushConstantRange.stageFlags =
-      VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-  pushConstantRange.offset = 0;
-  pushConstantRange.size = sizeof(PushConstantData);
-
-  VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-  pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  pipelineLayoutInfo.setLayoutCount = 0;
-  pipelineLayoutInfo.pSetLayouts = nullptr;
-  pipelineLayoutInfo.pushConstantRangeCount = 1;
-  pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
-
-  if (vkCreatePipelineLayout(vlknDevice.device(), &pipelineLayoutInfo, nullptr,
-                             &pipelineLayout) != VK_SUCCESS) {
-    throw std::runtime_error("failed to create pipeline layout");
-  }
-}
-
-void App::createPipeline() {
-  assert(vlknSwapChain != nullptr &&
-         "Cannot create pipeline before swap chain");
-  assert(pipelineLayout != nullptr &&
-         "Cannot create pipeline before pipeline layout");
-
-  PipelineConfigInfo pipelineConfig{};
-  VlknPipeline::defaultPipelineConfigInfo(pipelineConfig);
-  pipelineConfig.renderPass = vlknSwapChain->getRenderPass();
-  pipelineConfig.pipelineLayout = pipelineLayout;
-  vlknPipeline = std::make_unique<VlknPipeline>(
-      vlknDevice, "shaders/vert.spv", "shaders/frag.spv", pipelineConfig);
-}
-
-void App::recreateSwapChain() {
-  VkExtent2D extent = vlknWindow.getExtent();
-  while (extent.width == 0 || extent.height == 0) {
-    extent = vlknWindow.getExtent();
-    glfwWaitEvents();
-  }
-
-  vkDeviceWaitIdle(vlknDevice.device());
-
-  if (vlknSwapChain == nullptr) {
-    vlknSwapChain = std::make_unique<VlknSwapChain>(vlknDevice, extent);
-  } else {
-    vlknSwapChain = std::make_unique<VlknSwapChain>(vlknDevice, extent,
-                                                    std::move(vlknSwapChain));
-    if (vlknSwapChain->imageCount() != commandBuffers.size()) {
-      freeCommandBuffers();
-      createCommandBuffers();
+  // dt stands for delta time, and specifies the amount of time to advance the
+  // simulation substeps is how many intervals to divide the forward time step
+  // in. More substeps result in a more stable simulation, but takes longer to
+  // compute
+  void update(std::vector<VlknGameObject> &objs, float dt,
+              uint32_t substeps = 1) {
+    const float stepDelta = dt / substeps;
+    for (uint32_t i = 0; i < substeps; i++) {
+      stepSimulation(objs, stepDelta);
     }
   }
 
-  createPipeline();
+  glm::vec2 computeForce(VlknGameObject &fromObj, VlknGameObject &toObj) const {
+    auto offset =
+        fromObj.transform2d.translation - toObj.transform2d.translation;
+    float distanceSquared = glm::dot(offset, offset);
+
+    // clown town - just going to return 0 if objects are too close together...
+    if (glm::abs(distanceSquared) < 1e-10f) {
+      return {.0f, .0f};
+    }
+
+    float force = strengthGravity * toObj.rigidBody2d.mass *
+                  fromObj.rigidBody2d.mass / distanceSquared;
+    return force * offset / glm::sqrt(distanceSquared);
+  }
+
+private:
+  void stepSimulation(std::vector<VlknGameObject> &physicsObjs, float dt) {
+    // Loops through all pairs of objects and applies attractive force between
+    // them
+    for (auto iterA = physicsObjs.begin(); iterA != physicsObjs.end();
+         ++iterA) {
+      auto &objA = *iterA;
+      for (auto iterB = iterA; iterB != physicsObjs.end(); ++iterB) {
+        if (iterA == iterB)
+          continue;
+        auto &objB = *iterB;
+
+        auto force = computeForce(objA, objB);
+        objA.rigidBody2d.velocity += dt * -force / objA.rigidBody2d.mass;
+        objB.rigidBody2d.velocity += dt * force / objB.rigidBody2d.mass;
+      }
+    }
+
+    // update each objects position based on its final velocity
+    for (auto &obj : physicsObjs) {
+      obj.transform2d.translation += dt * obj.rigidBody2d.velocity;
+    }
+  }
+};
+
+class Vec2FieldSystem {
+public:
+  void update(const GravityPhysicsSystem &physicsSystem,
+              std::vector<VlknGameObject> &physicsObjs,
+              std::vector<VlknGameObject> &vectorField) {
+    // For each field line we caluclate the net graviation force for that point
+    // in space
+    for (auto &vf : vectorField) {
+      glm::vec2 direction{};
+      for (auto &obj : physicsObjs) {
+        direction += physicsSystem.computeForce(obj, vf);
+      }
+
+      // This scales the length of the field line based on the log of the length
+      // values were chosen just through trial and error based on what i liked
+      // the look of and then the field line is rotated to point in the
+      // direction of the field
+      vf.transform2d.scale.x =
+          0.005f +
+          0.045f *
+              glm::clamp(glm::log(glm::length(direction) + 1) / 3.f, 0.f, 1.f);
+      vf.transform2d.rotation = atan2(direction.y, direction.x);
+    }
+  }
+};
+
+std::unique_ptr<VlknModel> createSquareModel(VlknDevice &device,
+                                             glm::vec2 offset) {
+  std::vector<VlknModel::Vertex> vertices = {
+      {{-0.5f, -0.5f}}, {{0.5f, 0.5f}},  {{-0.5f, 0.5f}},
+      {{-0.5f, -0.5f}}, {{0.5f, -0.5f}}, {{0.5f, 0.5f}},
+  };
+
+  for (auto &v : vertices) {
+    v.position += offset;
+  }
+  return std::make_unique<VlknModel>(device, vertices);
 }
 
-void App::createCommandBuffers() {
-  commandBuffers.resize(vlknSwapChain->imageCount());
-  VkCommandBufferAllocateInfo allocInfo{};
-  allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-  allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-  allocInfo.commandPool = vlknDevice.getCommandPool();
-  allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
-
-  if (vkAllocateCommandBuffers(vlknDevice.device(), &allocInfo,
-                               commandBuffers.data()) != VK_SUCCESS) {
-    throw std::runtime_error("failed to create command buffers");
+std::unique_ptr<VlknModel> createCircleModel(VlknDevice &device,
+                                             uint32_t numSides) {
+  std::vector<VlknModel::Vertex> uniqueVertices{};
+  for (uint32_t i = 0; i < numSides; i++) {
+    float angle = i * glm::two_pi<float>() / numSides;
+    uniqueVertices.push_back({{glm::cos(angle), glm::sin(angle)}});
   }
+  uniqueVertices.push_back({}); // adds center vertex at 0, 0
+
+  std::vector<VlknModel::Vertex> vertices{};
+  for (uint32_t i = 0; i < numSides; i++) {
+    vertices.push_back(uniqueVertices[i]);
+    vertices.push_back(uniqueVertices[(i + 1) % numSides]);
+    vertices.push_back(uniqueVertices[numSides]);
+  }
+  return std::make_unique<VlknModel>(device, vertices);
 }
 
-void App::freeCommandBuffers() {
-  vkFreeCommandBuffers(vlknDevice.device(), vlknDevice.getCommandPool(),
-                       static_cast<uint32_t>(commandBuffers.size()),
-                       commandBuffers.data());
-  commandBuffers.clear();
+App::App() {
+  gameObjects.reserve(3);
+  loadGameObjects();
 }
 
-void App::drawFrame() {
-  uint32_t imageIndex;
-  VkResult result = vlknSwapChain->acquireNextImage(&imageIndex);
+App::~App() {}
 
-  if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-    recreateSwapChain();
-    return;
+void App::run() {
+  std::shared_ptr<VlknModel> squareModel = createSquareModel(
+      vlknDevice, {.5f, .0f}); // offset model by .5 so rotation occurs at edge
+                               // rather than center of square
+  std::shared_ptr<VlknModel> circleModel = createCircleModel(vlknDevice, 64);
+
+  RenderSystem renderSystem{vlknDevice, vlknRenderer.getSwapChainRenderPass()};
+
+  // create physics objects
+  std::vector<VlknGameObject> physicsObjects{};
+  auto red = VlknGameObject::createGameObject();
+  red.transform2d.scale = glm::vec2{.05f};
+  red.transform2d.translation = {.5f, .5f};
+  red.color = {1.f, 0.f, 0.f};
+  red.rigidBody2d.velocity = {-.5f, .0f};
+  red.model = circleModel;
+  physicsObjects.push_back(std::move(red));
+  auto blue = VlknGameObject::createGameObject();
+  blue.transform2d.scale = glm::vec2{.05f};
+  blue.transform2d.translation = {-.45f, -.25f};
+  blue.color = {0.f, 0.f, 1.f};
+  blue.rigidBody2d.velocity = {.5f, .0f};
+  blue.model = circleModel;
+  physicsObjects.push_back(std::move(blue));
+
+  // create vector field
+  std::vector<VlknGameObject> vectorField{};
+  int gridCount = 40;
+  for (int i = 0; i < gridCount; i++) {
+    for (int j = 0; j < gridCount; j++) {
+      auto vf = VlknGameObject::createGameObject();
+      vf.transform2d.scale = glm::vec2(0.005f);
+      vf.transform2d.translation = {-1.0f + (i + 0.5f) * 2.0f / gridCount,
+                                    -1.0f + (j + 0.5f) * 2.0f / gridCount};
+      vf.color = glm::vec3(1.0f);
+      vf.model = squareModel;
+      vectorField.push_back(std::move(vf));
+    }
   }
 
-  if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-    throw std::runtime_error("failed to acquire next image");
+  GravityPhysicsSystem gravitySystem{0.81f};
+  Vec2FieldSystem vecFieldSystem{};
+
+  RenderSystem RenderSystem{vlknDevice, vlknRenderer.getSwapChainRenderPass()};
+
+  while (!vlknWindow.shouldClose()) {
+    glfwPollEvents();
+
+    if (auto commandBuffer = vlknRenderer.beginFrame()) {
+      // update systems
+      gravitySystem.update(physicsObjects, 1.f / 60, 5);
+      vecFieldSystem.update(gravitySystem, physicsObjects, vectorField);
+
+      // render system
+      vlknRenderer.beginSwapChainRenderPass(commandBuffer);
+      RenderSystem.renderGameObjects(commandBuffer, physicsObjects);
+      RenderSystem.renderGameObjects(commandBuffer, vectorField);
+      vlknRenderer.endSwapChainRenderPass(commandBuffer);
+      vlknRenderer.endFrame();
+    }
   }
 
-  recordCommandBuffer(imageIndex);
-
-  result = vlknSwapChain->submitCommandBuffers(&commandBuffers[imageIndex],
-                                               &imageIndex);
-
-  if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
-      vlknWindow.wasWindowResized()) {
-    vlknWindow.resetWindowResizedFlag();
-    recreateSwapChain();
-    return;
-  }
-
-  if (result != VK_SUCCESS) {
-    throw std::runtime_error("failed to submit command buffer");
-  }
-}
-
-void App::sierpinski(std::vector<VlknModel::Vertex> &vertices, int depth,
-                     glm::vec2 left, glm::vec2 right, glm::vec2 top,
-                     glm::vec3 leftColor, glm::vec3 rightColor,
-                     glm::vec3 topColor) {
-  if (depth <= 0) {
-    vertices.emplace_back(top, topColor);
-    vertices.emplace_back(right, rightColor);
-    vertices.emplace_back(left, leftColor);
-  } else {
-    glm::vec2 leftTop = 0.5f * (left + top);
-    glm::vec2 rightTop = 0.5f * (right + top);
-    glm::vec2 leftRight = 0.5f * (left + right);
-    sierpinski(vertices, depth - 1, left, leftRight, leftTop, leftColor,
-               rightColor, topColor);
-    sierpinski(vertices, depth - 1, leftRight, right, rightTop, leftColor,
-               rightColor, topColor);
-    sierpinski(vertices, depth - 1, leftTop, rightTop, top, leftColor,
-               rightColor, topColor);
-  }
+  vkDeviceWaitIdle(vlknDevice.device());
 }
 
 void App::loadGameObjects() {
   std::vector<VlknModel::Vertex> vertices{{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
                                           {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
                                           {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
+  auto vlknModel = std::make_shared<VlknModel>(vlknDevice, vertices);
 
-  std::shared_ptr<VlknModel> vlknModel =
-      std::make_shared<VlknModel>(vlknDevice, vertices);
+  auto triangle = VlknGameObject::createGameObject();
+  triangle.model = vlknModel;
+  triangle.color = {.1f, .8f, .1f};
+  triangle.transform2d.translation.x = .2f;
+  triangle.transform2d.scale = {2.f, .5f};
+  triangle.transform2d.rotation = .25f * glm::two_pi<float>();
 
-  std::vector<glm::vec3> colors{
-      {1.f, .7f, .73f},
-      {1.f, .87f, .73f},
-      {1.f, 1.f, .73f},
-      {.73f, 1.f, .8f},
-      {.73, .88f, 1.f} //
-  };
-
-  for (glm::vec3 &color : colors) {
-    color = glm::pow(color, glm::vec3{2.2f});
-  }
-
-  for (int i = 0; i < 40; i++) {
-    auto triangle = VlknGameObject::createGameObject();
-    triangle.model = vlknModel;
-    triangle.transform2D.scale = glm::vec2(.5f) + i * 0.025f;
-    triangle.transform2D.rotation = i * glm::pi<float>() * .025f;
-    triangle.color = colors[i % colors.size()];
-    gameObjects.push_back(std::move(triangle));
-  }
-}
-
-void App::recordCommandBuffer(uint32_t imageIndex) {
-  VkCommandBufferBeginInfo beginInfo{};
-  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-  if (vkBeginCommandBuffer(commandBuffers[imageIndex], &beginInfo) !=
-      VK_SUCCESS) {
-    throw std::runtime_error("failed to begin buffer");
-  }
-
-  VkRenderPassBeginInfo renderPassInfo{};
-  renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  renderPassInfo.renderPass = vlknSwapChain->getRenderPass();
-  renderPassInfo.framebuffer = vlknSwapChain->getFrameBuffer(imageIndex);
-
-  renderPassInfo.renderArea.offset = {0, 0};
-  renderPassInfo.renderArea.extent = vlknSwapChain->getSwapChainExtent();
-
-  std::array<VkClearValue, 2> clearValues{};
-  clearValues[0].color = {{0.1f, 0.1f, 0.1f, 1.0f}};
-  clearValues[1].depthStencil = {1.0f, 0};
-
-  renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-  renderPassInfo.pClearValues = clearValues.data();
-
-  vkCmdBeginRenderPass(commandBuffers[imageIndex], &renderPassInfo,
-                       VK_SUBPASS_CONTENTS_INLINE);
-  VkViewport viewport{};
-  viewport.x = 0;
-  viewport.y = 0;
-  viewport.width =
-      static_cast<float>(vlknSwapChain->getSwapChainExtent().width);
-  viewport.height =
-      static_cast<float>(vlknSwapChain->getSwapChainExtent().height);
-  viewport.minDepth = 0.0f;
-  viewport.maxDepth = 1.0f;
-  VkRect2D scissor{{0, 0}, vlknSwapChain->getSwapChainExtent()};
-  vkCmdSetViewport(commandBuffers[imageIndex], 0, 1, &viewport);
-  vkCmdSetScissor(commandBuffers[imageIndex], 0, 1, &scissor);
-
-  renderGameObjects(commandBuffers[imageIndex]);
-
-  vkCmdEndRenderPass(commandBuffers[imageIndex]);
-
-  if (vkEndCommandBuffer(commandBuffers[imageIndex]) != VK_SUCCESS) {
-    throw std::runtime_error("failed to record command buffer");
-  }
-}
-
-void App::renderGameObjects(VkCommandBuffer commandBuffer) {
-
-  int i = 0;
-  for (VlknGameObject &obj : gameObjects) {
-    i += 1;
-    obj.transform2D.rotation = glm::mod<float>(
-        obj.transform2D.rotation + 0.00005f * i, 2.f * glm::pi<float>());
-  }
-
-  vlknPipeline->bind(commandBuffer);
-
-  for (VlknGameObject &obj : gameObjects) {
-    PushConstantData push{};
-    push.offset = obj.transform2D.translation;
-    push.color = obj.color;
-    push.transform = obj.transform2D.mat2();
-
-    vkCmdPushConstants(commandBuffer, pipelineLayout,
-                       VK_SHADER_STAGE_VERTEX_BIT |
-                           VK_SHADER_STAGE_FRAGMENT_BIT,
-                       0, sizeof(PushConstantData), &push);
-    obj.model->bind(commandBuffer);
-    obj.model->draw(commandBuffer);
-  }
+  gameObjects.push_back(std::move(triangle));
 }
 
 } // namespace vlkn

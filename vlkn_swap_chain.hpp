@@ -11,7 +11,7 @@ namespace vlkn {
 
 class VlknSwapChain {
 public:
-  static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+  static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 
   VlknSwapChain(VlknDevice &deviceRef, VkExtent2D windowExtent);
   VlknSwapChain(VlknDevice &deviceRef, VkExtent2D windowExtent,
@@ -42,6 +42,11 @@ public:
   VkResult submitCommandBuffers(const VkCommandBuffer *buffers,
                                 uint32_t *imageIndex);
 
+  bool compareSwapFormats(const VlknSwapChain &swapChain) const {
+    return swapChain.swapChainDepthFormat == swapChainDepthFormat &&
+           swapChain.swapChainImageFormat == swapChainImageFormat;
+  }
+
 private:
   void init();
   void createSwapChain();
@@ -58,6 +63,7 @@ private:
   VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
 
   VkFormat swapChainImageFormat;
+  VkFormat swapChainDepthFormat;
   VkExtent2D swapChainExtent;
 
   std::vector<VkFramebuffer> swapChainFramebuffers;
