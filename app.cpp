@@ -146,8 +146,6 @@ void App::run() {
                                // rather than center of square
   std::shared_ptr<VlknModel> circleModel = createCircleModel(vlknDevice, 64);
 
-  RenderSystem renderSystem{vlknDevice, vlknRenderer.getSwapChainRenderPass()};
-
   // create physics objects
   std::vector<VlknGameObject> physicsObjects{};
   auto red = VlknGameObject::createGameObject();
