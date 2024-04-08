@@ -18,8 +18,8 @@ public:
     Vertex(glm::vec2 pos);
     Vertex() {}
 
-    glm::vec2 position;
-    glm::vec3 color;
+    glm::vec2 position{};
+    glm::vec3 color{};
 
     static std::vector<VkVertexInputBindingDescription>
     getBindingDescriptions();

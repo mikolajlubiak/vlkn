@@ -73,7 +73,6 @@ VlknModel::Vertex::getAttributeDescriptions() {
 VlknModel::Vertex::Vertex(glm::vec2 pos, glm::vec3 col)
     : position(pos), color(col) {}
 
-VlknModel::Vertex::Vertex(glm::vec2 pos)
-    : position(pos) {}
+VlknModel::Vertex::Vertex(glm::vec2 pos) : position(pos) {}
 
 } // namespace vlkn
