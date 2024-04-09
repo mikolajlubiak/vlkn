@@ -17,8 +17,7 @@
 namespace vlkn {
 
 struct PushConstantData {
-  glm::mat2 transform{1.0f};
-  alignas(4) glm::vec2 offset;
+  glm::mat4 transform{1.0f};
   alignas(16) glm::vec3 color;
 };
 
@@ -67,21 +66,18 @@ void RenderSystem::createPipeline(VkRenderPass renderPass) {
 
 void RenderSystem::renderGameObjects(VkCommandBuffer commandBuffer,
                                      std::vector<VlknGameObject> &gameObjects) {
-
-  int i = 0;
-  for (VlknGameObject &obj : gameObjects) {
-    i += 1;
-    obj.transform2d.rotation = glm::mod<float>(
-        obj.transform2d.rotation + 0.00005f * i, 2.f * glm::pi<float>());
-  }
-
   vlknPipeline->bind(commandBuffer);
 
   for (VlknGameObject &obj : gameObjects) {
+    obj.transform.rotation.y = glm::mod<float>(
+        obj.transform.rotation.y + 0.0005f, 2.f * glm::two_pi<float>());
+
+    obj.transform.rotation.x = glm::mod<float>(
+        obj.transform.rotation.x + 0.0001f, 2.f * glm::two_pi<float>());
+
     PushConstantData push{};
-    push.offset = obj.transform2d.translation;
     push.color = obj.color;
-    push.transform = obj.transform2d.mat2();
+    push.transform = obj.transform.mat4();
 
     vkCmdPushConstants(commandBuffer, pipelineLayout,
                        VK_SHADER_STAGE_VERTEX_BIT |

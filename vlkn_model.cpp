@@ -59,7 +59,7 @@ VlknModel::Vertex::getAttributeDescriptions() {
 
   attributeDescriptions[0].binding = 0;
   attributeDescriptions[0].location = 0;
-  attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+  attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
   attributeDescriptions[0].offset = offsetof(Vertex, position);
 
   attributeDescriptions[1].binding = 0;
@@ -70,9 +70,9 @@ VlknModel::Vertex::getAttributeDescriptions() {
   return attributeDescriptions;
 }
 
-VlknModel::Vertex::Vertex(glm::vec2 pos, glm::vec3 col)
+VlknModel::Vertex::Vertex(glm::vec3 pos, glm::vec3 col)
     : position(pos), color(col) {}
 
-VlknModel::Vertex::Vertex(glm::vec2 pos) : position(pos) {}
+VlknModel::Vertex::Vertex(glm::vec3 pos) : position(pos) {}
 
 } // namespace vlkn

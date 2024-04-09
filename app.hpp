@@ -2,8 +2,8 @@
 
 #include "vlkn_device.hpp"
 #include "vlkn_game_object.hpp"
-#include "vlkn_window.hpp"
 #include "vlkn_renderer.hpp"
+#include "vlkn_window.hpp"
 
 #include <cstdint>
 #define GLM_FORCE_RADIANS
@@ -18,7 +18,7 @@ namespace vlkn {
 class App {
 public:
   static constexpr uint32_t WIDTH = 800;
-  static constexpr uint32_t HEIGH = 600;
+  static constexpr uint32_t HEIGH = 800;
 
   App();
   ~App();

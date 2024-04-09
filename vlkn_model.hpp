@@ -14,11 +14,11 @@ namespace vlkn {
 class VlknModel {
 public:
   struct Vertex {
-    Vertex(glm::vec2 pos, glm::vec3 col);
-    Vertex(glm::vec2 pos);
+    Vertex(glm::vec3 pos, glm::vec3 col);
+    Vertex(glm::vec3 pos);
     Vertex() {}
 
-    glm::vec2 position{};
+    glm::vec3 position{};
     glm::vec3 color{};
 
     static std::vector<VkVertexInputBindingDescription>
