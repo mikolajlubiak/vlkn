@@ -36,7 +36,14 @@ void App::run() {
 
   VlknCamera camera{};
 
+  double lastTime = glfwGetTime();
+  double deltaTime = 0, nowTime = 0;
+
   while (!vlknWindow.shouldClose()) {
+    nowTime = glfwGetTime();
+    deltaTime += nowTime - lastTime;
+    lastTime = nowTime;
+
     glfwPollEvents();
 
     float aspectRatio = vlknRenderer.getAspectRatio();
@@ -47,7 +54,8 @@ void App::run() {
     if (auto commandBuffer = vlknRenderer.beginFrame()) {
 
       vlknRenderer.beginSwapChainRenderPass(commandBuffer);
-      renderSystem.renderGameObjects(commandBuffer, gameObjects, camera);
+      renderSystem.renderGameObjects(commandBuffer, gameObjects, camera,
+                                     deltaTime);
       vlknRenderer.endSwapChainRenderPass(commandBuffer);
       vlknRenderer.endFrame();
     }

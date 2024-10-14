@@ -72,19 +72,24 @@ void RenderSystem::createPipeline(VkRenderPass renderPass) {
 
 void RenderSystem::renderGameObjects(VkCommandBuffer commandBuffer,
                                      std::vector<VlknGameObject> &gameObjects,
-                                     const VlknCamera &camera) {
+                                     const VlknCamera &camera,
+                                     float deltaTime) {
   vlknPipeline->bind(commandBuffer);
 
   for (VlknGameObject &obj : gameObjects) {
-    obj.transform.rotation.y = glm::mod<float>(
-        obj.transform.rotation.y + 0.0005f, 2.f * glm::two_pi<float>());
+    TransformComponent transform = obj.transform;
 
-    obj.transform.rotation.x = glm::mod<float>(
-        obj.transform.rotation.x + 0.0001f, 2.f * glm::two_pi<float>());
+    transform.rotation.y =
+        glm::mod<float>(obj.transform.rotation.y + deltaTime * 5.0f,
+                        2.0f * glm ::two_pi<float>());
+
+    transform.rotation.x =
+        glm::mod<float>(obj.transform.rotation.x + deltaTime * 1.0f,
+                        2.0f * glm::two_pi<float>());
 
     PushConstantData push{};
     push.color = obj.color;
-    push.transform = camera.getProjection() * obj.transform.mat4();
+    push.transform = camera.getProjection() * transform.mat4();
 
     vkCmdPushConstants(commandBuffer, pipelineLayout,
                        VK_SHADER_STAGE_VERTEX_BIT |
