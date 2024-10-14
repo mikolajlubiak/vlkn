@@ -35,10 +35,13 @@ void App::run() {
   RenderSystem renderSystem{vlknDevice, vlknRenderer.getSwapChainRenderPass()};
 
   VlknCamera camera{};
-  camera.setOrthographicProjection(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
 
   while (!vlknWindow.shouldClose()) {
     glfwPollEvents();
+
+    float aspectRatio = vlknRenderer.getAspectRatio();
+    camera.setOrthographicProjection(-aspectRatio, aspectRatio, -1.0f, 1.0f,
+                                     -1.0f, 1.0f);
 
     if (auto commandBuffer = vlknRenderer.beginFrame()) {
 

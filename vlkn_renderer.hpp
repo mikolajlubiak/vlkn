@@ -28,6 +28,8 @@ public:
     return vlknSwapChain->getRenderPass();
   }
 
+  float getAspectRatio() const { return vlknSwapChain->extentAspectRatio(); }
+
   bool isFrameInProgress() const { return isFrameStarted; }
 
   VkCommandBuffer getCurrentCommandBuffer() const {
