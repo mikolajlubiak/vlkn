@@ -36,6 +36,8 @@ void App::run() {
 
   VlknCamera camera{};
 
+  camera.setViewDirection(glm::vec3(0.0f), glm::vec3(0.5f, 0.0f, 1.0f));
+
   double lastTime = glfwGetTime();
   double deltaTime = 0, nowTime = 0;
 

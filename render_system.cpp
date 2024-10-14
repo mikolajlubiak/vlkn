@@ -76,20 +76,20 @@ void RenderSystem::renderGameObjects(VkCommandBuffer commandBuffer,
                                      float deltaTime) {
   vlknPipeline->bind(commandBuffer);
 
+  glm::mat4 projectionView = camera.getProjection() * camera.getView();
+
   for (VlknGameObject &obj : gameObjects) {
     TransformComponent transform = obj.transform;
 
-    transform.rotation.y =
-        glm::mod<float>(obj.transform.rotation.y + deltaTime * 5.0f,
-                        2.0f * glm ::two_pi<float>());
+    transform.rotation.y = glm::mod<float>(
+        obj.transform.rotation.y + deltaTime * 5.0f, glm ::two_pi<float>());
 
-    transform.rotation.x =
-        glm::mod<float>(obj.transform.rotation.x + deltaTime * 1.0f,
-                        2.0f * glm::two_pi<float>());
+    transform.rotation.x = glm::mod<float>(
+        obj.transform.rotation.x + deltaTime * 1.0f, glm::two_pi<float>());
 
     PushConstantData push{};
     push.color = obj.color;
-    push.transform = camera.getProjection() * transform.mat4();
+    push.transform = projectionView * transform.mat4();
 
     vkCmdPushConstants(commandBuffer, pipelineLayout,
                        VK_SHADER_STAGE_VERTEX_BIT |
