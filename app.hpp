@@ -1,17 +1,21 @@
 #pragma once
 
+// local
 #include "vlkn_device.hpp"
 #include "vlkn_game_object.hpp"
 #include "vlkn_renderer.hpp"
 #include "vlkn_window.hpp"
 
-#include <cstdint>
+// libs
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
-#include <vector>
 #include <vulkan/vulkan_core.h>
+
+// std
+#include <cstdint>
+#include <vector>
 
 namespace vlkn {
 

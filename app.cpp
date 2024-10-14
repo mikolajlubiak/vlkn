@@ -1,19 +1,26 @@
+// header
 #include "app.hpp"
+
+// local
 #include "render_system.hpp"
+#include "vlkn_camera.hpp"
 #include "vlkn_device.hpp"
 #include "vlkn_game_object.hpp"
 #include "vlkn_model.hpp"
 #include "vlkn_renderer.hpp"
 
+// libs
 #include <GLFW/glfw3.h>
-#include <bits/fs_fwd.h>
 #include <glm/detail/qualifier.hpp>
 #include <glm/fwd.hpp>
 #include <glm/gtc/constants.hpp>
+#include <vulkan/vulkan_core.h>
+
+// std
+#include <bits/fs_fwd.h>
 #include <memory>
 #include <utility>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 
 namespace vlkn {
 
@@ -27,13 +34,16 @@ App::~App() {}
 void App::run() {
   RenderSystem renderSystem{vlknDevice, vlknRenderer.getSwapChainRenderPass()};
 
+  VlknCamera camera{};
+  camera.setOrthographicProjection(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
+
   while (!vlknWindow.shouldClose()) {
     glfwPollEvents();
 
     if (auto commandBuffer = vlknRenderer.beginFrame()) {
 
       vlknRenderer.beginSwapChainRenderPass(commandBuffer);
-      renderSystem.renderGameObjects(commandBuffer, gameObjects);
+      renderSystem.renderGameObjects(commandBuffer, gameObjects, camera);
       vlknRenderer.endSwapChainRenderPass(commandBuffer);
       vlknRenderer.endFrame();
     }
@@ -104,11 +114,11 @@ std::unique_ptr<VlknModel> createCubeModel(VlknDevice &device,
 }
 
 void App::loadGameObjects() {
-  std::shared_ptr<VlknModel> vlknModel =
+  std::shared_ptr<VlknModel> cubeModel =
       createCubeModel(vlknDevice, {0.0f, 0.0f, 0.0f});
 
   VlknGameObject cube = VlknGameObject::createGameObject();
-  cube.model = vlknModel;
+  cube.model = cubeModel;
   cube.transform.translation = {0.0f, 0.0f, 0.5f};
   cube.transform.scale = {0.5f, 0.5f, 0.5f};
 

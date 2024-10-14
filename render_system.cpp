@@ -1,18 +1,24 @@
+// header
 #include "render_system.hpp"
+
+// local
 #include "vlkn_device.hpp"
 #include "vlkn_game_object.hpp"
 #include "vlkn_pipeline.hpp"
 
+// libs
 #include <GLFW/glfw3.h>
-#include <bits/fs_fwd.h>
-#include <cassert>
 #include <glm/detail/qualifier.hpp>
 #include <glm/fwd.hpp>
 #include <glm/gtc/constants.hpp>
+#include <vulkan/vulkan_core.h>
+
+// std
+#include <bits/fs_fwd.h>
+#include <cassert>
 #include <memory>
 #include <stdexcept>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 
 namespace vlkn {
 
@@ -65,7 +71,8 @@ void RenderSystem::createPipeline(VkRenderPass renderPass) {
 }
 
 void RenderSystem::renderGameObjects(VkCommandBuffer commandBuffer,
-                                     std::vector<VlknGameObject> &gameObjects) {
+                                     std::vector<VlknGameObject> &gameObjects,
+                                     const VlknCamera &camera) {
   vlknPipeline->bind(commandBuffer);
 
   for (VlknGameObject &obj : gameObjects) {
@@ -77,7 +84,7 @@ void RenderSystem::renderGameObjects(VkCommandBuffer commandBuffer,
 
     PushConstantData push{};
     push.color = obj.color;
-    push.transform = obj.transform.mat4();
+    push.transform = camera.getProjection() * obj.transform.mat4();
 
     vkCmdPushConstants(commandBuffer, pipelineLayout,
                        VK_SHADER_STAGE_VERTEX_BIT |
