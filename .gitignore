@@ -1,3 +1,5 @@
 shaders/*.spv
 debug
 release
+
+.vscode/

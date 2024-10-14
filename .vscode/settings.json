@@ -1,8 +1,0 @@
-{
-    "files.associations": {
-        "stdexcept": "cpp",
-        "memory": "cpp",
-        "cassert": "cpp",
-        "cstdint": "cpp"
-    }
-}
