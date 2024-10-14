@@ -2,6 +2,7 @@
 #include "app.hpp"
 
 // local
+#include "keyboard_movement_controller.hpp"
 #include "render_system.hpp"
 #include "vlkn_camera.hpp"
 #include "vlkn_device.hpp"
@@ -36,19 +37,31 @@ void App::run() {
 
   VlknCamera camera{};
 
-  camera.setViewDirection(glm::vec3(0.0f), glm::vec3(0.5f, 0.0f, 1.0f));
+  camera.setViewTarget(glm::vec3(-1.0f, -2.0f, 2.0f),
+                       glm::vec3(0.0f, 0.0f, 2.0f));
 
-  double lastTime = glfwGetTime();
-  double deltaTime = 0, nowTime = 0;
+  VlknGameObject viewerObject = VlknGameObject::createGameObject();
+  KeyboardMovementController cameraController{};
+
+  double lastTime = glfwGetTime(), nowTime = 0.0f;
+  float deltaTime = 0.0f;
+
+  float aspectRatio = vlknRenderer.getAspectRatio();
 
   while (!vlknWindow.shouldClose()) {
-    nowTime = glfwGetTime();
-    deltaTime += nowTime - lastTime;
-    lastTime = nowTime;
-
     glfwPollEvents();
 
-    float aspectRatio = vlknRenderer.getAspectRatio();
+    nowTime = glfwGetTime();
+    deltaTime = nowTime - lastTime;
+    lastTime = nowTime;
+
+    aspectRatio = vlknRenderer.getAspectRatio();
+
+    cameraController.moveInPlaneXZ(vlknWindow.getGLFWwindow(), deltaTime,
+                                   viewerObject);
+
+    camera.setViewYXZ(viewerObject.transform.translation,
+                      viewerObject.transform.rotation);
 
     camera.setPerspectiveProjection(glm::radians(50.0f), aspectRatio, 0.1f,
                                     10.0f);
@@ -56,8 +69,7 @@ void App::run() {
     if (auto commandBuffer = vlknRenderer.beginFrame()) {
 
       vlknRenderer.beginSwapChainRenderPass(commandBuffer);
-      renderSystem.renderGameObjects(commandBuffer, gameObjects, camera,
-                                     deltaTime);
+      renderSystem.renderGameObjects(commandBuffer, gameObjects, camera);
       vlknRenderer.endSwapChainRenderPass(commandBuffer);
       vlknRenderer.endFrame();
     }

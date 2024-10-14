@@ -32,8 +32,8 @@ void VlknCamera::setPerspectiveProjection(float fovy, float aspect, float near,
 
 void VlknCamera::setViewDirection(glm::vec3 position, glm::vec3 direction,
                                   glm::vec3 up) {
-  assert(glm::abs(glm::length(direction) -
-                  std::numeric_limits<float>::epsilon()) > 0.0f);
+  assert(glm::length2(direction) > std::numeric_limits<float>::epsilon() *
+                                       std::numeric_limits<float>::epsilon());
 
   const glm::vec3 w{glm::normalize(direction)};
   const glm::vec3 u{glm::normalize(glm::cross(w, up))};

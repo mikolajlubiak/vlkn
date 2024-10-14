@@ -29,7 +29,7 @@ public:
 
   void renderGameObjects(VkCommandBuffer commandBuffer,
                          std::vector<VlknGameObject> &gameObjects,
-                         const VlknCamera &camera, float deltaTime);
+                         const VlknCamera &camera);
 
 private:
   void createPipelineLayout();

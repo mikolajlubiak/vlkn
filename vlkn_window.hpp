@@ -27,13 +27,17 @@ public:
 
   void createWindowSurface(VkInstance instance, VkSurfaceKHR *surface);
 
+  GLFWwindow *getGLFWwindow() const { return window; }
+
 private:
   static void framebufferResizedCallback(GLFWwindow *window, int width,
                                          int height);
+
   void initWindow();
 
   uint32_t width, height;
   bool framebufferResized = false;
+
   const std::string windowName;
   GLFWwindow *window;
 };

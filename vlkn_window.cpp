@@ -1,10 +1,14 @@
+// header
 #include "vlkn_window.hpp"
-#include <GLFW/glfw3.h>
 
+// libs
+#include <GLFW/glfw3.h>
+#include <vulkan/vulkan_core.h>
+
+// std
 #include <cstdint>
 #include <stdexcept>
 #include <string>
-#include <vulkan/vulkan_core.h>
 
 namespace vlkn {
 
@@ -46,5 +50,4 @@ void VlknWindow::framebufferResizedCallback(GLFWwindow *window, int width,
   vlknWindow->width = static_cast<uint32_t>(width);
   vlknWindow->height = static_cast<uint32_t>(height);
 }
-
 } // namespace vlkn
