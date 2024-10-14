@@ -40,8 +40,9 @@ void App::run() {
     glfwPollEvents();
 
     float aspectRatio = vlknRenderer.getAspectRatio();
-    camera.setOrthographicProjection(-aspectRatio, aspectRatio, -1.0f, 1.0f,
-                                     -1.0f, 1.0f);
+
+    camera.setPerspectiveProjection(glm::radians(50.0f), aspectRatio, 0.1f,
+                                    10.0f);
 
     if (auto commandBuffer = vlknRenderer.beginFrame()) {
 
@@ -122,7 +123,7 @@ void App::loadGameObjects() {
 
   VlknGameObject cube = VlknGameObject::createGameObject();
   cube.model = cubeModel;
-  cube.transform.translation = {0.0f, 0.0f, 0.5f};
+  cube.transform.translation = {0.0f, 0.0f, 2.0f};
   cube.transform.scale = {0.5f, 0.5f, 0.5f};
 
   gameObjects.push_back(std::move(cube));
