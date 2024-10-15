@@ -21,8 +21,6 @@ private:
   static constexpr float mouseSensitivity{0.01f};
   static constexpr float scrollSensitivity{0.1f};
 
-  static glm::vec3 rotate;
-
   static float mouseLastX;
   static float mouseLastY;
   static float mouseOffsetX;

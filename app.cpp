@@ -35,13 +35,12 @@ App::~App() {}
 
 void App::run() {
   RenderSystem renderSystem{vlknDevice, vlknRenderer.getSwapChainRenderPass()};
-
   VlknCamera camera{};
+  VlknGameObject viewerObject = VlknGameObject::createGameObject();
 
   camera.setViewTarget(glm::vec3(-1.0f, -2.0f, 2.0f),
                        glm::vec3(0.0f, 0.0f, 2.0f));
 
-  VlknGameObject viewerObject = VlknGameObject::createGameObject();
   KeyboardMovementController keyboardController{};
   MouseMovementController mouseController{};
 
@@ -49,7 +48,7 @@ void App::run() {
   float nowTime = 0.0f;
   float deltaTime = 0.0f;
   float accumulator = 0.0f;
-  const float tickrate = 1.0f / 128; // 128 ticks per secound
+  const float tickrate = 1.0f / 512; // 512 ticks per secound
 
   float aspectRatio = vlknRenderer.getAspectRatio();
 
@@ -76,7 +75,7 @@ void App::run() {
                       viewerObject.transform.rotation);
 
     camera.setPerspectiveProjection(mouseController.getFov(), aspectRatio, 0.1f,
-                                    10.0f);
+                                    100.0f);
 
     if (auto commandBuffer = vlknRenderer.beginFrame()) {
 
