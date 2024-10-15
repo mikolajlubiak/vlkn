@@ -21,12 +21,12 @@ public:
     uint32_t lookDown = GLFW_KEY_DOWN;
   };
 
-  void moveInPlaneXZ(GLFWwindow *window, float deltaTime,
-                     VlknGameObject &gameObject);
+  void moveInPlaneXYZ(GLFWwindow *window, float step,
+                      VlknGameObject &gameObject);
 
+private:
   KeyMappings keys{};
-  float movementSpeed{3.0f};
-  float turnSpeed{3.0f};
+  float speed{3.0f};
 };
 
 } // namespace vlkn

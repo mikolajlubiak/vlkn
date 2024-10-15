@@ -1,6 +1,9 @@
 // header
 #include "vlkn_window.hpp"
 
+// local
+#include "callbacks.hpp"
+
 // libs
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan_core.h>
@@ -32,6 +35,14 @@ void VlknWindow::initWindow() {
       glfwCreateWindow(width, height, windowName.c_str(), nullptr, nullptr);
   glfwSetWindowUserPointer(window, this);
   glfwSetFramebufferSizeCallback(window, framebufferResizedCallback);
+  glfwSetCursorPosCallback(window, callbacks::mouseCallback);
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+  if (glfwRawMouseMotionSupported()) {
+    glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+  }
+
+  glfwSetScrollCallback(window, callbacks::scrollCallback);
 }
 
 void VlknWindow::createWindowSurface(VkInstance instance,

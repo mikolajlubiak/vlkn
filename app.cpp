@@ -3,6 +3,7 @@
 
 // local
 #include "keyboard_movement_controller.hpp"
+#include "mouse_movement_controller.hpp"
 #include "render_system.hpp"
 #include "vlkn_camera.hpp"
 #include "vlkn_device.hpp"
@@ -41,36 +42,41 @@ void App::run() {
                        glm::vec3(0.0f, 0.0f, 2.0f));
 
   VlknGameObject viewerObject = VlknGameObject::createGameObject();
-  KeyboardMovementController cameraController{};
+  KeyboardMovementController keyboardController{};
+  MouseMovementController mouseController{};
 
-  double lastTime = glfwGetTime();
-  double nowTime = 0.0;
-  double deltaTime = 0.0;
-  double accumulator = 0.0;
-  const double tickrate = 1.0 / 128.0; // 128 ticks per secound
+  float lastTime = static_cast<float>(glfwGetTime());
+  float nowTime = 0.0f;
+  float deltaTime = 0.0f;
+  float accumulator = 0.0f;
+  const float tickrate = 1.0f / 128; // 128 ticks per secound
 
   float aspectRatio = vlknRenderer.getAspectRatio();
 
   while (!vlknWindow.shouldClose()) {
     glfwPollEvents();
 
-    nowTime = glfwGetTime();
+    nowTime = static_cast<float>(glfwGetTime());
     deltaTime = nowTime - lastTime;
     accumulator += deltaTime;
     lastTime = nowTime;
 
     aspectRatio = vlknRenderer.getAspectRatio();
 
-    while (accumulator > tickrate + std::numeric_limits<double>::epsilon()) {
-      cameraController.moveInPlaneXZ(vlknWindow.getGLFWwindow(), tickrate,
-                                     viewerObject);
+    mouseController.lookAround(viewerObject);
+    mouseController.zoom();
+
+    while (accumulator >
+           tickrate + std::numeric_limits<decltype(tickrate)>::epsilon()) {
+      keyboardController.moveInPlaneXYZ(vlknWindow.getGLFWwindow(), tickrate,
+                                        viewerObject);
       accumulator -= tickrate;
     }
 
     camera.setViewYXZ(viewerObject.transform.translation,
                       viewerObject.transform.rotation);
 
-    camera.setPerspectiveProjection(glm::radians(50.0f), aspectRatio, 0.1f,
+    camera.setPerspectiveProjection(mouseController.getFov(), aspectRatio, 0.1f,
                                     10.0f);
 
     if (auto commandBuffer = vlknRenderer.beginFrame()) {

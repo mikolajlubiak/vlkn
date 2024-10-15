@@ -1,6 +1,9 @@
 // header
 #include "vlkn_camera.hpp"
 
+// local
+#include "common.hpp"
+
 // std
 #include <cassert>
 #include <limits>
@@ -20,8 +23,9 @@ void VlknCamera::setOrthographicProjection(float left, float right, float top,
 
 void VlknCamera::setPerspectiveProjection(float fovy, float aspect, float near,
                                           float far) {
-  assert(glm::abs(aspect) > std::numeric_limits<float>::epsilon());
-  const float tanHalfFovy = tan(fovy / 2.f);
+  assert(glm::abs(aspect) >
+         std::numeric_limits<decltype(glm::abs(aspect))>::epsilon());
+  const float tanHalfFovy = std::tan(fovy / 2.f);
   projectionMatrix = glm::mat4{0.0f};
   projectionMatrix[0][0] = 1.f / (aspect * tanHalfFovy);
   projectionMatrix[1][1] = 1.f / (tanHalfFovy);
@@ -32,8 +36,7 @@ void VlknCamera::setPerspectiveProjection(float fovy, float aspect, float near,
 
 void VlknCamera::setViewDirection(glm::vec3 position, glm::vec3 direction,
                                   glm::vec3 up) {
-  assert(glm::length2(direction) > std::numeric_limits<float>::epsilon() *
-                                       std::numeric_limits<float>::epsilon());
+  assert(nonZeroVector(direction));
 
   const glm::vec3 w{glm::normalize(direction)};
   const glm::vec3 u{glm::normalize(glm::cross(w, up))};
