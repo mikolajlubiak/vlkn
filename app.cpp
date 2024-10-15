@@ -43,8 +43,11 @@ void App::run() {
   VlknGameObject viewerObject = VlknGameObject::createGameObject();
   KeyboardMovementController cameraController{};
 
-  double lastTime = glfwGetTime(), nowTime = 0.0f;
-  float deltaTime = 0.0f;
+  double lastTime = glfwGetTime();
+  double nowTime = 0.0;
+  double deltaTime = 0.0;
+  double accumulator = 0.0;
+  const double tickrate = 1.0 / 128.0; // 128 ticks per secound
 
   float aspectRatio = vlknRenderer.getAspectRatio();
 
@@ -53,12 +56,16 @@ void App::run() {
 
     nowTime = glfwGetTime();
     deltaTime = nowTime - lastTime;
+    accumulator += deltaTime;
     lastTime = nowTime;
 
     aspectRatio = vlknRenderer.getAspectRatio();
 
-    cameraController.moveInPlaneXZ(vlknWindow.getGLFWwindow(), deltaTime,
-                                   viewerObject);
+    while (accumulator > tickrate + std::numeric_limits<double>::epsilon()) {
+      cameraController.moveInPlaneXZ(vlknWindow.getGLFWwindow(), tickrate,
+                                     viewerObject);
+      accumulator -= tickrate;
+    }
 
     camera.setViewYXZ(viewerObject.transform.translation,
                       viewerObject.transform.rotation);
