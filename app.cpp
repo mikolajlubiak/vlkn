@@ -48,7 +48,7 @@ void App::run() {
   float nowTime = 0.0f;
   float deltaTime = 0.0f;
   float accumulator = 0.0f;
-  const float tickrate = 1.0f / 512; // 512 ticks per secound
+  const float tickrate = 1.0f / 512; // 512 ticks per second
 
   float aspectRatio = vlknRenderer.getAspectRatio();
 
