@@ -20,8 +20,9 @@ void KeyboardMovementController::moveInPlaneXYZ(GLFWwindow *window, float step,
 
   const glm::vec3 forwardDir{std::sin(yaw) * std::cos(pitch), -std::sin(pitch),
                              std::cos(yaw) * std::cos(pitch)};
-  const glm::vec3 rightDir{forwardDir.z, 0.0f, -forwardDir.x};
-  const glm::vec3 upDir{0.0f, -1.0f, 0.0f};
+  const glm::vec3 rightDir =
+      glm::normalize(glm::cross(glm::vec3{0.0f, 1.0f, 0.0f}, forwardDir));
+  const glm::vec3 upDir = glm::normalize(glm::cross(rightDir, forwardDir));
   glm::vec3 moveDir{0.0f};
 
   if (glfwGetKey(window, keys.moveForward) == GLFW_PRESS) {
