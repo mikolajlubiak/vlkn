@@ -64,7 +64,6 @@ void App::run() {
     aspectRatio = vlknRenderer.getAspectRatio();
 
     mouseController.lookAround(viewerObject);
-    mouseController.zoom();
 
     while (accumulator >
            tickrate + std::numeric_limits<decltype(tickrate)>::epsilon()) {

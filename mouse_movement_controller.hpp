@@ -1,7 +1,6 @@
 #pragma once
 
 // local
-#include "callbacks.hpp"
 #include "vlkn_game_object.hpp"
 #include "vlkn_window.hpp"
 
@@ -10,20 +9,26 @@ namespace vlkn {
 class MouseMovementController {
 public:
   void lookAround(VlknGameObject &gameObject);
-  void zoom();
 
-  float getFov() const { return fov; }
+  static float getFov() { return fov; }
+
+  static void mouseCallback(GLFWwindow *window, double xpos, double ypos);
+
+  static void scrollCallback(GLFWwindow *window, double xoffset,
+                             double yoffset);
 
 private:
-  const float mouseSensitivity{0.01f};
-  const float scrollSensitivity{0.1f};
+  static constexpr float mouseSensitivity{0.01f};
+  static constexpr float scrollSensitivity{0.1f};
 
-  float mouseLastX{callbacks::mousePosX};
-  float mouseLastY{callbacks::mousePosY};
-  float mouseOffsetX{};
-  float mouseOffsetY{};
+  static glm::vec3 rotate;
 
-  float fov{glm::radians(50.0f)};
+  static float mouseLastX;
+  static float mouseLastY;
+  static float mouseOffsetX;
+  static float mouseOffsetY;
+
+  static float fov;
 };
 
 } // namespace vlkn
