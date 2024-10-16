@@ -76,9 +76,9 @@ void App::run() {
           glm::normalize(gameObjects[0].transform.translation -
                          viewerObject.transform.translation);
 
-      float yaw = atan2(direction.x, direction.z);
+      float yaw = std::atan2(direction.x, direction.z);
 
-      float pitch = -asin(direction.y);
+      float pitch = -std::asin(direction.y);
 
       viewerObject.transform.rotation = glm::vec3(pitch, yaw, 0.0f);
     }
