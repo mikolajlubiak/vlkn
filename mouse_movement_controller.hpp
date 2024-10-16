@@ -12,10 +12,11 @@ public:
 
   static float getFov() { return fov; }
 
-  static void mouseCallback(GLFWwindow *window, double xpos, double ypos);
+  static void mouseCallback(GLFWwindow *const window, const double xpos,
+                            const double ypos);
 
-  static void scrollCallback(GLFWwindow *window, double xoffset,
-                             double yoffset);
+  static void scrollCallback(GLFWwindow *const window, const double xoffset,
+                             const double yoffset);
 
 private:
   static constexpr float mouseSensitivity{0.01f};

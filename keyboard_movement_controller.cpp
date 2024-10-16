@@ -13,10 +13,27 @@
 #include <limits>
 
 namespace vlkn {
-void KeyboardMovementController::moveInPlaneXYZ(GLFWwindow *window, float step,
-                                                VlknGameObject &gameObject) {
-  float yaw = gameObject.transform.rotation.y;
-  float pitch = gameObject.transform.rotation.x;
+void KeyboardMovementController::keyboardCallback(GLFWwindow *const window,
+                                                  const int key,
+                                                  const int scancode,
+                                                  const int action,
+                                                  const int mods) {
+  switch (action) {
+  case GLFW_PRESS:
+    keys[key] = true;
+    break;
+  case GLFW_RELEASE:
+    keys[key] = false;
+    break;
+  default:
+    break;
+  }
+}
+
+void KeyboardMovementController::move(VlknGameObject &gameObject,
+                                      const float step) {
+  const float yaw = gameObject.transform.rotation.y;
+  const float pitch = gameObject.transform.rotation.x;
 
   const glm::vec3 forwardDir = glm::normalize(
       glm::vec3(std::sin(yaw) * std::cos(pitch), -std::sin(pitch),
@@ -26,22 +43,22 @@ void KeyboardMovementController::moveInPlaneXYZ(GLFWwindow *window, float step,
   const glm::vec3 upDir = glm::normalize(glm::cross(rightDir, forwardDir));
   glm::vec3 moveDir{0.0f};
 
-  if (glfwGetKey(window, keys.moveForward) == GLFW_PRESS) {
+  if (keys[moveForward]) {
     moveDir += forwardDir;
   }
-  if (glfwGetKey(window, keys.moveBackward) == GLFW_PRESS) {
+  if (keys[moveBackward]) {
     moveDir -= forwardDir;
   }
-  if (glfwGetKey(window, keys.moveRight) == GLFW_PRESS) {
+  if (keys[moveRight]) {
     moveDir += rightDir;
   }
-  if (glfwGetKey(window, keys.moveLeft) == GLFW_PRESS) {
+  if (keys[moveLeft]) {
     moveDir -= rightDir;
   }
-  if (glfwGetKey(window, keys.moveUp) == GLFW_PRESS) {
+  if (keys[moveUp]) {
     moveDir += upDir;
   }
-  if (glfwGetKey(window, keys.moveDown) == GLFW_PRESS) {
+  if (keys[moveDown]) {
     moveDir -= upDir;
   }
 
@@ -49,4 +66,7 @@ void KeyboardMovementController::moveInPlaneXYZ(GLFWwindow *window, float step,
     gameObject.transform.translation += speed * step * glm::normalize(moveDir);
   }
 }
+
+std::unordered_map<int, bool> KeyboardMovementController::keys{};
+
 } // namespace vlkn

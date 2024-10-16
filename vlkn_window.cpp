@@ -2,6 +2,7 @@
 #include "vlkn_window.hpp"
 
 // local
+#include "keyboard_movement_controller.hpp"
 #include "mouse_movement_controller.hpp"
 
 // libs
@@ -34,15 +35,18 @@ void VlknWindow::initWindow() {
   window =
       glfwCreateWindow(width, height, windowName.c_str(), nullptr, nullptr);
   glfwSetWindowUserPointer(window, this);
+
   glfwSetFramebufferSizeCallback(window, framebufferResizedCallback);
+
   glfwSetCursorPosCallback(window, MouseMovementController::mouseCallback);
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
   if (glfwRawMouseMotionSupported()) {
     glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
   }
 
   glfwSetScrollCallback(window, MouseMovementController::scrollCallback);
+
+  glfwSetKeyCallback(window, KeyboardMovementController::keyboardCallback);
 }
 
 void VlknWindow::createWindowSurface(VkInstance instance,

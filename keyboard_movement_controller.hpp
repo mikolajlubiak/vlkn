@@ -4,29 +4,38 @@
 #include "vlkn_game_object.hpp"
 #include "vlkn_window.hpp"
 
+// std
+#include <unordered_map>
+
 namespace vlkn {
 
 class KeyboardMovementController {
 public:
-  struct KeyMappings {
-    uint32_t moveLeft = GLFW_KEY_A;
-    uint32_t moveRight = GLFW_KEY_D;
-    uint32_t moveForward = GLFW_KEY_W;
-    uint32_t moveBackward = GLFW_KEY_S;
-    uint32_t moveUp = GLFW_KEY_E;
-    uint32_t moveDown = GLFW_KEY_Q;
-    uint32_t lookLeft = GLFW_KEY_LEFT;
-    uint32_t lookRight = GLFW_KEY_RIGHT;
-    uint32_t lookUp = GLFW_KEY_UP;
-    uint32_t lookDown = GLFW_KEY_DOWN;
+  enum KeyMappings : uint32_t {
+    moveLeft = GLFW_KEY_A,
+    moveRight = GLFW_KEY_D,
+    moveForward = GLFW_KEY_W,
+    moveBackward = GLFW_KEY_S,
+    moveUp = GLFW_KEY_E,
+    moveDown = GLFW_KEY_Q,
+    lookLeft = GLFW_KEY_LEFT,
+    lookRight = GLFW_KEY_RIGHT,
+    lookUp = GLFW_KEY_UP,
+    lookDown = GLFW_KEY_DOWN,
+    closeApp = GLFW_KEY_ESCAPE,
   };
 
-  void moveInPlaneXYZ(GLFWwindow *window, float step,
-                      VlknGameObject &gameObject);
+  bool shouldClose() { return keys[closeApp]; }
+
+  void move(VlknGameObject &gameObject, const float step);
+
+  static void keyboardCallback(GLFWwindow *const window, const int key,
+                               const int scancode, const int action,
+                               const int mods);
 
 private:
-  KeyMappings keys{};
-  float speed{3.0f};
+  static std::unordered_map<int, bool> keys;
+  static constexpr float speed{3.0f};
 };
 
 } // namespace vlkn

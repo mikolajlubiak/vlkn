@@ -28,16 +28,18 @@ void MouseMovementController::lookAround(VlknGameObject &gameObject) {
   }
 }
 
-void MouseMovementController::mouseCallback(GLFWwindow *window, double xpos,
-                                            double ypos) {
+void MouseMovementController::mouseCallback(GLFWwindow *const window,
+                                            const double xpos,
+                                            const double ypos) {
   mouseOffsetX = static_cast<float>(xpos) - mouseLastX;
   mouseOffsetY = mouseLastY - static_cast<float>(ypos);
   mouseLastX = static_cast<float>(xpos);
   mouseLastY = static_cast<float>(ypos);
 }
 
-void MouseMovementController::scrollCallback(GLFWwindow *window, double xoffset,
-                                             double yoffset) {
+void MouseMovementController::scrollCallback(GLFWwindow *const window,
+                                             const double xoffset,
+                                             const double yoffset) {
   fov -= scrollSensitivity * static_cast<float>(yoffset);
   fov = glm::clamp(fov, glm::radians(1.0f), glm::radians(89.0f));
 }

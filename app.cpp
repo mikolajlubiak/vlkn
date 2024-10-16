@@ -52,7 +52,7 @@ void App::run() {
 
   float aspectRatio = vlknRenderer.getAspectRatio();
 
-  while (!vlknWindow.shouldClose()) {
+  while (!vlknWindow.shouldClose() && !keyboardController.shouldClose()) {
     glfwPollEvents();
 
     nowTime = static_cast<float>(glfwGetTime());
@@ -66,8 +66,7 @@ void App::run() {
 
     while (accumulator >
            tickrate + std::numeric_limits<decltype(tickrate)>::epsilon()) {
-      keyboardController.moveInPlaneXYZ(vlknWindow.getGLFWwindow(), tickrate,
-                                        viewerObject);
+      keyboardController.move(viewerObject, tickrate);
       accumulator -= tickrate;
     }
 
