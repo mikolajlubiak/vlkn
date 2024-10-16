@@ -23,11 +23,10 @@ public:
     lookUp = GLFW_KEY_UP,
     lookDown = GLFW_KEY_DOWN,
     closeApp = GLFW_KEY_ESCAPE,
-    lookAtCenter = GLFW_KEY_1,
   };
 
-  KeyboardMovementController(VlknGameObject &gameObject)
-      : gameObject(gameObject) {}
+  KeyboardMovementController(VlknGameObject &viewerObject)
+      : viewerObject(viewerObject) {}
 
   bool shouldClose() { return keys[closeApp]; }
 
@@ -37,8 +36,10 @@ public:
                                const int scancode, const int action,
                                const int mods);
 
+  bool isKeyPressed(uint32_t key) { return keys[key]; }
+
 private:
-  VlknGameObject &gameObject;
+  VlknGameObject &viewerObject;
   static std::unordered_map<uint32_t, bool> keys;
   static constexpr float speed{3.0f};
 };

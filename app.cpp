@@ -27,7 +27,7 @@
 namespace vlkn {
 
 App::App() {
-  gameObjects.reserve(3);
+  gameObjects.reserve(16);
   loadGameObjects();
 }
 
@@ -38,8 +38,8 @@ void App::run() {
   VlknCamera camera{};
   VlknGameObject viewerObject = VlknGameObject::createGameObject();
 
-  camera.setViewTarget(glm::vec3(-1.0f, -2.0f, 2.0f),
-                       glm::vec3(0.0f, 0.0f, 2.0f));
+  camera.setViewTarget(glm::vec3(0.0f, 0.0f, 0.0f),
+                       gameObjects[0].transform.translation);
 
   KeyboardMovementController keyboardController{viewerObject};
   MouseMovementController mouseController{viewerObject};
@@ -68,6 +68,19 @@ void App::run() {
            tickrate + std::numeric_limits<decltype(tickrate)>::epsilon()) {
       keyboardController.move(tickrate);
       accumulator -= tickrate;
+    }
+
+    // look at cube
+    if (keyboardController.isKeyPressed(GLFW_KEY_1)) {
+      glm::vec3 direction =
+          glm::normalize(gameObjects[0].transform.translation -
+                         viewerObject.transform.translation);
+
+      float yaw = atan2(direction.x, direction.z);
+
+      float pitch = -asin(direction.y);
+
+      viewerObject.transform.rotation = glm::vec3(pitch, yaw, 0.0f);
     }
 
     camera.setViewYXZ(viewerObject.transform.translation,

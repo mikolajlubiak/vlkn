@@ -31,17 +31,19 @@ void KeyboardMovementController::keyboardCallback(GLFWwindow *const window,
 }
 
 void KeyboardMovementController::move(const float step) {
-  const float yaw = gameObject.transform.rotation.y;
-  const float pitch = gameObject.transform.rotation.x;
+  const float yaw = viewerObject.transform.rotation.y;
+  const float pitch = viewerObject.transform.rotation.x;
 
   const glm::vec3 forwardDir = glm::normalize(
       glm::vec3(std::sin(yaw) * std::cos(pitch), -std::sin(pitch),
                 std::cos(yaw) * std::cos(pitch)));
+
   const glm::vec3 rightDir =
       glm::normalize(glm::cross(glm::vec3{0.0f, 1.0f, 0.0f}, forwardDir));
-  const glm::vec3 upDir = glm::normalize(glm::cross(rightDir, forwardDir));
-  glm::vec3 moveDir{0.0f};
 
+  const glm::vec3 upDir = glm::normalize(glm::cross(rightDir, forwardDir));
+
+  glm::vec3 moveDir{0.0f};
   if (keys[moveForward]) {
     moveDir += forwardDir;
   }
@@ -61,12 +63,9 @@ void KeyboardMovementController::move(const float step) {
     moveDir -= upDir;
   }
 
-  if (keys[lookAtCenter]) {
-    gameObject.transform.rotation = glm::vec3(0.0f);
-  }
-
   if (nonZeroVector(moveDir)) {
-    gameObject.transform.translation += speed * step * glm::normalize(moveDir);
+    viewerObject.transform.translation +=
+        speed * step * glm::normalize(moveDir);
   }
 }
 

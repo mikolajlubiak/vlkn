@@ -16,13 +16,16 @@ namespace vlkn {
 
 void MouseMovementController::lookAround() {
   if (mouseOffsetX != 0.0f || mouseOffsetY != 0.0f) {
-    gameObject.transform.rotation.x += mouseSensitivity * mouseOffsetY;
-    gameObject.transform.rotation.y += mouseSensitivity * mouseOffsetX;
-    gameObject.transform.rotation.x =
-        glm::clamp(gameObject.transform.rotation.x, glm::radians(-89.0f),
+    viewerObject.transform.rotation.x += mouseSensitivity * mouseOffsetY;
+    viewerObject.transform.rotation.y += mouseSensitivity * mouseOffsetX;
+
+    viewerObject.transform.rotation.x =
+        glm::clamp(viewerObject.transform.rotation.x, glm::radians(-89.0f),
                    glm::radians(89.0f));
-    gameObject.transform.rotation.y =
-        glm::mod(gameObject.transform.rotation.y, glm::two_pi<float>());
+
+    viewerObject.transform.rotation.y =
+        glm::mod(viewerObject.transform.rotation.y, glm::two_pi<float>());
+
     mouseOffsetX = 0.0f;
     mouseOffsetY = 0.0f;
   }
