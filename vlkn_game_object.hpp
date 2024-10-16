@@ -15,6 +15,8 @@ struct TransformComponent {
   glm::vec3 rotation{};
 
   glm::mat4 mat4() {
+    // Rotation: YXZ Tait–Bryan angles
+    // Scale & Translation: XYZ
     const float c3 = glm::cos(rotation.z);
     const float s3 = glm::sin(rotation.z);
     const float c2 = glm::cos(rotation.x);
@@ -64,7 +66,7 @@ public:
   TransformComponent transform{};
 
 private:
-  VlknGameObject(id_t objId) : id(objId){};
+  VlknGameObject(id_t objId) : id(objId) {};
   id_t id;
 };
 
