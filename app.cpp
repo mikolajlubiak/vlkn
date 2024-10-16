@@ -80,6 +80,10 @@ void App::run() {
 
       float pitch = -std::asin(direction.y);
 
+      pitch = glm::clamp(pitch, glm::radians(-89.0f), glm::radians(89.0f));
+
+      yaw = glm::mod(yaw, glm::two_pi<decltype(yaw)>());
+
       viewerObject.transform.rotation = glm::vec3(pitch, yaw, 0.0f);
     }
 

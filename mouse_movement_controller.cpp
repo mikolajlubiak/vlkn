@@ -24,7 +24,8 @@ void MouseMovementController::lookAround() {
                    glm::radians(89.0f));
 
     viewerObject.transform.rotation.y =
-        glm::mod(viewerObject.transform.rotation.y, glm::two_pi<float>());
+        glm::mod(viewerObject.transform.rotation.y,
+                 glm::two_pi<decltype(viewerObject.transform.rotation.y)>());
 
     mouseOffsetX = 0.0f;
     mouseOffsetY = 0.0f;
