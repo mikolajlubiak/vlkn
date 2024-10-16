@@ -71,6 +71,7 @@ void App::run() {
     }
 
     // look at cube
+    // see docs/look_at_rotation_vector
     if (keyboardController.isKeyPressed(GLFW_KEY_1)) {
       glm::vec3 direction =
           glm::normalize(gameObjects[0].transform.translation -
