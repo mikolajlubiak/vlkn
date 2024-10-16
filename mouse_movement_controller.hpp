@@ -8,7 +8,10 @@ namespace vlkn {
 
 class MouseMovementController {
 public:
-  void lookAround(VlknGameObject &gameObject);
+  MouseMovementController(VlknGameObject &gameObject)
+      : gameObject(gameObject) {}
+
+  void lookAround();
 
   static float getFov() { return fov; }
 
@@ -19,6 +22,8 @@ public:
                              const double yoffset);
 
 private:
+  VlknGameObject &gameObject;
+
   static constexpr float mouseSensitivity{0.01f};
   static constexpr float scrollSensitivity{0.1f};
 

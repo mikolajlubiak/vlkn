@@ -34,7 +34,7 @@ public:
 private:
   void loadGameObjects();
 
-  VlknWindow vlknWindow{WIDTH, HEIGH, "vlkn Demo"};
+  VlknWindow vlknWindow{WIDTH, HEIGH, "vlkn"};
   VlknDevice vlknDevice{vlknWindow};
   VlknRenderer vlknRenderer{vlknWindow, vlknDevice};
 

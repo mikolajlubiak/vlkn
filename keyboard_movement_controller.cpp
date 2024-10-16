@@ -30,8 +30,7 @@ void KeyboardMovementController::keyboardCallback(GLFWwindow *const window,
   }
 }
 
-void KeyboardMovementController::move(VlknGameObject &gameObject,
-                                      const float step) {
+void KeyboardMovementController::move(const float step) {
   const float yaw = gameObject.transform.rotation.y;
   const float pitch = gameObject.transform.rotation.x;
 
@@ -62,11 +61,15 @@ void KeyboardMovementController::move(VlknGameObject &gameObject,
     moveDir -= upDir;
   }
 
+  if (keys[lookAtCenter]) {
+    gameObject.transform.rotation = glm::vec3(0.0f);
+  }
+
   if (nonZeroVector(moveDir)) {
     gameObject.transform.translation += speed * step * glm::normalize(moveDir);
   }
 }
 
-std::unordered_map<int, bool> KeyboardMovementController::keys{};
+std::unordered_map<uint32_t, bool> KeyboardMovementController::keys{};
 
 } // namespace vlkn

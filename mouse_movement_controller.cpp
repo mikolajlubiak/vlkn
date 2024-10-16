@@ -14,7 +14,7 @@
 
 namespace vlkn {
 
-void MouseMovementController::lookAround(VlknGameObject &gameObject) {
+void MouseMovementController::lookAround() {
   if (mouseOffsetX != 0.0f || mouseOffsetY != 0.0f) {
     gameObject.transform.rotation.x += mouseSensitivity * mouseOffsetY;
     gameObject.transform.rotation.y += mouseSensitivity * mouseOffsetX;

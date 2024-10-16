@@ -23,18 +23,23 @@ public:
     lookUp = GLFW_KEY_UP,
     lookDown = GLFW_KEY_DOWN,
     closeApp = GLFW_KEY_ESCAPE,
+    lookAtCenter = GLFW_KEY_1,
   };
+
+  KeyboardMovementController(VlknGameObject &gameObject)
+      : gameObject(gameObject) {}
 
   bool shouldClose() { return keys[closeApp]; }
 
-  void move(VlknGameObject &gameObject, const float step);
+  void move(const float step);
 
   static void keyboardCallback(GLFWwindow *const window, const int key,
                                const int scancode, const int action,
                                const int mods);
 
 private:
-  static std::unordered_map<int, bool> keys;
+  VlknGameObject &gameObject;
+  static std::unordered_map<uint32_t, bool> keys;
   static constexpr float speed{3.0f};
 };
 

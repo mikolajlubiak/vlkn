@@ -41,8 +41,8 @@ void App::run() {
   camera.setViewTarget(glm::vec3(-1.0f, -2.0f, 2.0f),
                        glm::vec3(0.0f, 0.0f, 2.0f));
 
-  KeyboardMovementController keyboardController{};
-  MouseMovementController mouseController{};
+  KeyboardMovementController keyboardController{viewerObject};
+  MouseMovementController mouseController{viewerObject};
 
   float lastTime = static_cast<float>(glfwGetTime());
   float nowTime = 0.0f;
@@ -62,11 +62,11 @@ void App::run() {
 
     aspectRatio = vlknRenderer.getAspectRatio();
 
-    mouseController.lookAround(viewerObject);
+    mouseController.lookAround();
 
     while (accumulator >
            tickrate + std::numeric_limits<decltype(tickrate)>::epsilon()) {
-      keyboardController.move(viewerObject, tickrate);
+      keyboardController.move(tickrate);
       accumulator -= tickrate;
     }
 
