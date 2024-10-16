@@ -10,9 +10,6 @@
 namespace vlkn {
 
 struct PipelineConfigInfo {
-  PipelineConfigInfo(const PipelineConfigInfo &) = delete;
-  PipelineConfigInfo &operator=(const PipelineConfigInfo &) = delete;
-
   VkPipelineViewportStateCreateInfo viewportInfo;
   VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo;
   VkPipelineRasterizationStateCreateInfo rasterizationInfo;

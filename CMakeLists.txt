@@ -1,0 +1,55 @@
+cmake_minimum_required(VERSION 3.5)
+
+project(vlkn)
+
+# Gather source and header files
+file(GLOB_RECURSE vlkn_SOURCES CONFIGURE_DEPENDS "src/*.cpp")
+file(GLOB_RECURSE vlkn_HEADERS CONFIGURE_DEPENDS "src/*.hpp")
+file(GLOB_RECURSE SHADER_SOURCES CONFIGURE_DEPENDS "shaders/shader.*")
+
+# Set include directories
+set(vlkn_INCLUDE_DIRS "")
+foreach(_headerFile ${vlkn_HEADERS})
+    get_filename_component(_dir ${_headerFile} PATH)
+    list(APPEND vlkn_INCLUDE_DIRS ${_dir})
+endforeach()
+list(REMOVE_DUPLICATES vlkn_INCLUDE_DIRS)
+
+# Compiler and linker flags
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lglfw")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
+# Define build types
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG")
+
+# Custom command to compile shaders
+add_custom_command(
+    OUTPUT shaders/vert.spv shaders/frag.spv
+    COMMAND ${CMAKE_COMMAND} -E make_directory shaders
+    COMMAND glslc -O ../shaders/shader.vert -o shaders/vert.spv
+    COMMAND glslc -O ../shaders/shader.frag -o shaders/frag.spv
+    DEPENDS ${SHADER_SOURCES}
+    COMMENT "Compiling shaders"
+)
+
+include(FindPkgConfig)
+find_package(glm CONFIG REQUIRED)
+find_package(Vulkan REQUIRED)
+find_package(glfw3 REQUIRED)
+
+# Create executable targets
+add_executable(${PROJECT_NAME} ${vlkn_SOURCES})
+
+# Add shader compilation as a dependency
+add_custom_target(compile_shaders DEPENDS ${CMAKE_BINARY_DIR}/shaders/vert.spv ${CMAKE_BINARY_DIR}/shaders/frag.spv)
+add_dependencies(${PROJECT_NAME} compile_shaders)
+
+# Include directories
+include_directories(${vlkn_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS})
+
+# Link libraries
+target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES} ${GLFW_LIBRARIES} ${GLM_LIBRARY_DIRS})
+
