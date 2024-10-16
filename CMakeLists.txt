@@ -17,13 +17,9 @@ list(REMOVE_DUPLICATES vlkn_INCLUDE_DIRS)
 
 # Compiler and linker flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lglfw")
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # Define build types
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE_INIT "${CMAKE_CXX_FLAGS_RELEASE_INIT} - -Ofast -march=native -mtune=native -DNDEBUG")
 
 # Custom command to compile shaders
 add_custom_command(
@@ -35,6 +31,7 @@ add_custom_command(
     COMMENT "Compiling shaders"
 )
 
+# Add dependencies
 include(FindPkgConfig)
 find_package(glm CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
@@ -48,8 +45,8 @@ add_custom_target(compile_shaders DEPENDS ${CMAKE_BINARY_DIR}/shaders/vert.spv $
 add_dependencies(${PROJECT_NAME} compile_shaders)
 
 # Include directories
-include_directories(${vlkn_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS})
+include_directories(${vlkn_INCLUDE_DIRS} vulkan glfw glm)
 
 # Link libraries
-target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES} ${GLFW_LIBRARIES} ${GLM_LIBRARY_DIRS})
+target_link_libraries(${PROJECT_NAME} vulkan glfw glm::glm)
 
