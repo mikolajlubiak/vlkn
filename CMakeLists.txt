@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
-
 project(vlkn)
+
+# Set C++ standard
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Gather source and header files
 file(GLOB_RECURSE vlkn_SOURCES CONFIGURE_DEPENDS "src/*.cpp")
@@ -15,10 +18,7 @@ foreach(_headerFile ${vlkn_HEADERS})
 endforeach()
 list(REMOVE_DUPLICATES vlkn_INCLUDE_DIRS)
 
-# Compiler and linker flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
-
-# Define build types
+# Set release build flags
 set(CMAKE_CXX_FLAGS_RELEASE_INIT "${CMAKE_CXX_FLAGS_RELEASE_INIT} - -Ofast -march=native -mtune=native -DNDEBUG")
 
 # Custom command to compile shaders
@@ -31,13 +31,13 @@ add_custom_command(
     COMMENT "Compiling shaders"
 )
 
-# Add dependencies
+# Add library dependencies
 include(FindPkgConfig)
 find_package(glm CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
 find_package(glfw3 REQUIRED)
 
-# Create executable targets
+# Create executable
 add_executable(${PROJECT_NAME} ${vlkn_SOURCES})
 
 # Add shader compilation as a dependency
