@@ -1,6 +1,7 @@
 #pragma once
 
 // local
+#include "vlkn_descriptors.hpp"
 #include "vlkn_device.hpp"
 #include "vlkn_game_object.hpp"
 #include "vlkn_renderer.hpp"
@@ -37,6 +38,8 @@ private:
   VlknWindow vlknWindow{WIDTH, HEIGH, "vlkn"};
   VlknDevice vlknDevice{vlknWindow};
   VlknRenderer vlknRenderer{vlknWindow, vlknDevice};
+
+  std::unique_ptr<VlknDescriptorPool> globalPool{};
 
   std::vector<VlknGameObject> gameObjects;
 };

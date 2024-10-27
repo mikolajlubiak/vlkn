@@ -13,6 +13,7 @@ struct FrameInfo {
   float frameTime;
   VkCommandBuffer commandBuffer;
   VlknCamera &camera;
+  VkDescriptorSet globalDescriptorSet;
 };
 
 } // namespace vlkn

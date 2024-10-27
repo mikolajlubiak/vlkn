@@ -22,7 +22,8 @@ namespace vlkn {
 
 class RenderSystem {
 public:
-  RenderSystem(VlknDevice &device, VkRenderPass renderPass);
+  RenderSystem(VlknDevice &device, VkRenderPass renderPass,
+               VkDescriptorSetLayout globalSetLayout);
   ~RenderSystem();
 
   RenderSystem(const RenderSystem &) = delete;
@@ -32,7 +33,7 @@ public:
                          std::vector<VlknGameObject> &gameObjects);
 
 private:
-  void createPipelineLayout();
+  void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
   void createPipeline(VkRenderPass renderPass);
 
   VlknDevice &vlknDevice;

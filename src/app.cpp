@@ -33,6 +33,12 @@ struct GlobalUbo {
 };
 
 App::App() {
+  globalPool = VlknDescriptorPool::Builder(vlknDevice)
+                   .setMaxSets(VlknSwapChain::MAX_FRAMES_IN_FLIGHT)
+                   .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                                VlknSwapChain::MAX_FRAMES_IN_FLIGHT)
+                   .build();
+
   gameObjects.reserve(16);
   loadGameObjects();
 }
@@ -51,7 +57,23 @@ void App::run() {
     uboBuffers[i]->map();
   }
 
-  RenderSystem renderSystem{vlknDevice, vlknRenderer.getSwapChainRenderPass()};
+  auto globalSetLayout = VlknDescriptorSetLayout::Builder(vlknDevice)
+                             .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                                         VK_SHADER_STAGE_VERTEX_BIT)
+                             .build();
+
+  std::vector<VkDescriptorSet> globalDescriptorSets(
+      VlknSwapChain::MAX_FRAMES_IN_FLIGHT);
+
+  for (std::size_t i = 0; i < globalDescriptorSets.size(); i++) {
+    auto bufferInfo = uboBuffers[i]->descriptorInfo();
+    VlknDescriptorWriter(*globalSetLayout, *globalPool)
+        .writeBuffer(0, &bufferInfo)
+        .build(globalDescriptorSets[i]);
+  }
+
+  RenderSystem renderSystem{vlknDevice, vlknRenderer.getSwapChainRenderPass(),
+                            globalSetLayout->getDescriptorSetLayout()};
   VlknCamera camera{};
   VlknGameObject viewerObject = VlknGameObject::createGameObject();
 
@@ -100,7 +122,9 @@ void App::run() {
       FrameInfo frameInfo{.frameIndex = frameIndex,
                           .frameTime = deltaTime,
                           .commandBuffer = commandBuffer,
-                          .camera = camera};
+                          .camera = camera,
+                          .globalDescriptorSet =
+                              globalDescriptorSets[frameIndex]};
 
       // update stage
       GlobalUbo ubo{};
