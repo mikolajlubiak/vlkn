@@ -40,15 +40,6 @@ VlknModel::VlknModel(VlknDevice &device, const Builder &builder)
   createVertexBuffers(builder.vertices);
   createIndexBuffers(builder.indices);
 }
-VlknModel::~VlknModel() {
-  vkDestroyBuffer(vlknDevice.device(), vertexBuffer, nullptr);
-  vkFreeMemory(vlknDevice.device(), vertexBufferMemory, nullptr);
-
-  if (hasIndexBuffer) {
-    vkDestroyBuffer(vlknDevice.device(), indexBuffer, nullptr);
-    vkFreeMemory(vlknDevice.device(), indexBufferMemory, nullptr);
-  }
-}
 
 std::unique_ptr<VlknModel>
 VlknModel::createModelFromFile(VlknDevice &device,
@@ -62,31 +53,26 @@ VlknModel::createModelFromFile(VlknDevice &device,
 void VlknModel::createVertexBuffers(const std::vector<Vertex> &vertices) {
   vertexCount = static_cast<std::uint32_t>(vertices.size());
   assert(vertexCount >= 3 && "Vertex count must be at least 3");
-  VkDeviceSize bufferSize = sizeof(vertices[0]) * vertexCount;
 
-  VkBuffer stagingBuffer;
-  VkDeviceMemory stagingBufferMemory;
+  std::uint32_t vertexSize = sizeof(decltype(vertices[0]));
 
-  vlknDevice.createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                              VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                          stagingBuffer, stagingBufferMemory);
+  VkDeviceSize bufferSize = vertexSize * vertexCount;
 
-  void *data;
-  vkMapMemory(vlknDevice.device(), stagingBufferMemory, 0, bufferSize, 0,
-              &data);
-  memcpy(data, vertices.data(), static_cast<std::size_t>(bufferSize));
-  vkUnmapMemory(vlknDevice.device(), stagingBufferMemory);
+  VlknBuffer stagingBuffer{vlknDevice, vertexSize, vertexCount,
+                           VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                           VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                               VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
 
-  vlknDevice.createBuffer(
-      bufferSize,
+  stagingBuffer.map();
+  stagingBuffer.writeToBuffer(reinterpret_cast<const void *>(vertices.data()));
+
+  vertexBuffer = std::make_unique<VlknBuffer>(
+      vlknDevice, vertexSize, vertexCount,
       VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
+      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-  vlknDevice.copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
-
-  vkDestroyBuffer(vlknDevice.device(), stagingBuffer, nullptr);
-  vkFreeMemory(vlknDevice.device(), stagingBufferMemory, nullptr);
+  vlknDevice.copyBuffer(stagingBuffer.getBuffer(), vertexBuffer->getBuffer(),
+                        bufferSize);
 }
 
 void VlknModel::createIndexBuffers(const std::vector<std::uint32_t> &indices) {
@@ -97,31 +83,25 @@ void VlknModel::createIndexBuffers(const std::vector<std::uint32_t> &indices) {
     return;
   }
 
-  VkDeviceSize bufferSize = sizeof(indices[0]) * indexCount;
+  std::uint32_t indexSize = sizeof(decltype(indices[0]));
 
-  VkBuffer stagingBuffer;
-  VkDeviceMemory stagingBufferMemory;
+  VkDeviceSize bufferSize = indexSize * indexCount;
 
-  vlknDevice.createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                              VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                          stagingBuffer, stagingBufferMemory);
+  VlknBuffer stagingBuffer{vlknDevice, indexSize, indexCount,
+                           VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                           VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                               VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
 
-  void *data;
-  vkMapMemory(vlknDevice.device(), stagingBufferMemory, 0, bufferSize, 0,
-              &data);
-  memcpy(data, indices.data(), static_cast<std::size_t>(bufferSize));
-  vkUnmapMemory(vlknDevice.device(), stagingBufferMemory);
+  stagingBuffer.map();
+  stagingBuffer.writeToBuffer(reinterpret_cast<const void *>(indices.data()));
 
-  vlknDevice.createBuffer(
-      bufferSize,
+  indexBuffer = std::make_unique<VlknBuffer>(
+      vlknDevice, indexSize, indexCount,
       VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
+      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-  vlknDevice.copyBuffer(stagingBuffer, indexBuffer, bufferSize);
-
-  vkDestroyBuffer(vlknDevice.device(), stagingBuffer, nullptr);
-  vkFreeMemory(vlknDevice.device(), stagingBufferMemory, nullptr);
+  vlknDevice.copyBuffer(stagingBuffer.getBuffer(), indexBuffer->getBuffer(),
+                        bufferSize);
 }
 
 void VlknModel::draw(VkCommandBuffer commandBuffer) {
@@ -133,12 +113,13 @@ void VlknModel::draw(VkCommandBuffer commandBuffer) {
 }
 
 void VlknModel::bind(VkCommandBuffer commandBuffer) {
-  VkBuffer buffers[] = {vertexBuffer};
+  VkBuffer buffers[] = {vertexBuffer->getBuffer()};
   VkDeviceSize offsets[] = {0};
   vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
 
   if (hasIndexBuffer) {
-    vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+    vkCmdBindIndexBuffer(commandBuffer, indexBuffer->getBuffer(), 0,
+                         VK_INDEX_TYPE_UINT32);
   }
 }
 

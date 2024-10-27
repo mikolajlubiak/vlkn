@@ -1,6 +1,7 @@
 #pragma once
 
 // local
+#include "vlkn_buffer.hpp"
 #include "vlkn_device.hpp"
 
 // libs
@@ -50,7 +51,6 @@ public:
   };
 
   VlknModel(VlknDevice &device, const Builder &builder);
-  ~VlknModel();
 
   VlknModel(const VlknModel &) = delete;
   VlknModel &operator=(const VlknModel &) = delete;
@@ -67,13 +67,11 @@ private:
 
   VlknDevice &vlknDevice;
 
-  VkBuffer vertexBuffer;
-  VkDeviceMemory vertexBufferMemory;
+  std::unique_ptr<VlknBuffer> vertexBuffer;
   std::uint32_t vertexCount;
 
   bool hasIndexBuffer = false;
-  VkBuffer indexBuffer;
-  VkDeviceMemory indexBufferMemory;
+  std::unique_ptr<VlknBuffer> indexBuffer;
   std::uint32_t indexCount;
 };
 
