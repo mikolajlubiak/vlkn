@@ -70,12 +70,12 @@ void RenderSystem::createPipeline(VkRenderPass renderPass) {
       vlknDevice, "shaders/vert.spv", "shaders/frag.spv", pipelineConfig);
 }
 
-void RenderSystem::renderGameObjects(VkCommandBuffer commandBuffer,
-                                     std::vector<VlknGameObject> &gameObjects,
-                                     const VlknCamera &camera) {
-  vlknPipeline->bind(commandBuffer);
+void RenderSystem::renderGameObjects(FrameInfo &frameInfo,
+                                     std::vector<VlknGameObject> &gameObjects) {
+  vlknPipeline->bind(frameInfo.commandBuffer);
 
-  glm::mat4 projectionView = camera.getProjection() * camera.getView();
+  glm::mat4 projectionView =
+      frameInfo.camera.getProjection() * frameInfo.camera.getView();
 
   for (VlknGameObject &obj : gameObjects) {
     PushConstantData push{};
@@ -83,12 +83,12 @@ void RenderSystem::renderGameObjects(VkCommandBuffer commandBuffer,
     push.normalMatrix = obj.transform.normalMatrix();
     push.transform = projectionView * modelMatrix;
 
-    vkCmdPushConstants(commandBuffer, pipelineLayout,
+    vkCmdPushConstants(frameInfo.commandBuffer, pipelineLayout,
                        VK_SHADER_STAGE_VERTEX_BIT |
                            VK_SHADER_STAGE_FRAGMENT_BIT,
                        0, sizeof(PushConstantData), &push);
-    obj.model->bind(commandBuffer);
-    obj.model->draw(commandBuffer);
+    obj.model->bind(frameInfo.commandBuffer);
+    obj.model->draw(frameInfo.commandBuffer);
   }
 }
 

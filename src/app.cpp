@@ -5,12 +5,12 @@
 #include "keyboard_movement_controller.hpp"
 #include "mouse_movement_controller.hpp"
 #include "render_system.hpp"
+#include "vlkn_buffer.hpp"
 #include "vlkn_camera.hpp"
 #include "vlkn_device.hpp"
 #include "vlkn_game_object.hpp"
 #include "vlkn_model.hpp"
 #include "vlkn_renderer.hpp"
-#include "vlkn_utils.hpp"
 
 // libs
 #include <GLFW/glfw3.h>
@@ -27,6 +27,11 @@
 
 namespace vlkn {
 
+struct GlobalUbo {
+  glm::mat4 projectionView{1.0f};
+  glm::vec3 lightDirection = glm::normalize(glm::vec3(1.0f, -3.0f, -1.0f));
+};
+
 App::App() {
   gameObjects.reserve(16);
   loadGameObjects();
@@ -35,6 +40,17 @@ App::App() {
 App::~App() {}
 
 void App::run() {
+  std::vector<std::unique_ptr<VlknBuffer>> uboBuffers(
+      VlknSwapChain::MAX_FRAMES_IN_FLIGHT);
+
+  for (std::size_t i = 0; i < uboBuffers.size(); i++) {
+    uboBuffers[i] = std::make_unique<VlknBuffer>(
+        vlknDevice, sizeof(GlobalUbo), 1, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+
+    uboBuffers[i]->map();
+  }
+
   RenderSystem renderSystem{vlknDevice, vlknRenderer.getSwapChainRenderPass()};
   VlknCamera camera{};
   VlknGameObject viewerObject = VlknGameObject::createGameObject();
@@ -61,15 +77,15 @@ void App::run() {
     accumulator += deltaTime;
     lastTime = nowTime;
 
-    aspectRatio = vlknRenderer.getAspectRatio();
-
-    mouseController.lookAround();
-
     while (accumulator >
            tickrate + std::numeric_limits<decltype(tickrate)>::epsilon()) {
       keyboardController.move(tickrate);
       accumulator -= tickrate;
     }
+
+    aspectRatio = vlknRenderer.getAspectRatio();
+
+    mouseController.lookAround();
 
     keyboardController.lookAt(gameObjects);
 
@@ -80,9 +96,21 @@ void App::run() {
                                     100.0f);
 
     if (auto commandBuffer = vlknRenderer.beginFrame()) {
+      std::uint32_t frameIndex = vlknRenderer.getFrameIndex();
+      FrameInfo frameInfo{.frameIndex = frameIndex,
+                          .frameTime = deltaTime,
+                          .commandBuffer = commandBuffer,
+                          .camera = camera};
 
+      // update stage
+      GlobalUbo ubo{};
+      ubo.projectionView = camera.getProjection() * camera.getView();
+      uboBuffers[frameIndex]->writeToBuffer(&ubo);
+      uboBuffers[frameIndex]->flush();
+
+      // render stage
       vlknRenderer.beginSwapChainRenderPass(commandBuffer);
-      renderSystem.renderGameObjects(commandBuffer, gameObjects, camera);
+      renderSystem.renderGameObjects(frameInfo, gameObjects);
       vlknRenderer.endSwapChainRenderPass(commandBuffer);
       vlknRenderer.endFrame();
     }
