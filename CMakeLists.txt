@@ -40,7 +40,7 @@ find_package(glfw3 REQUIRED)
 
 # Copy models to build directory
 foreach (_model ${vlkn_MODELS})
-	file(RELATIVE_PATH _relative_path ${CMAKE_SOURCE_DIR}/models ${_model})
+	file(RELATIVE_PATH _relative_path ${CMAKE_SOURCE_DIR} ${_model})
 	configure_file(${_model} ${CMAKE_BINARY_DIR}/${_relative_path} COPYONLY)
 endforeach()
 
