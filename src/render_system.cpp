@@ -23,8 +23,8 @@
 namespace vlkn {
 
 struct PushConstantData {
-  glm::mat4 modelMatrix{1.0f};
-  glm::mat4 normalMatrix{1.0f};
+  alignas(16) glm::mat4 modelMatrix{1.0f};
+  alignas(16) glm::mat4 normalMatrix{1.0f};
 };
 
 RenderSystem::RenderSystem(VlknDevice &device, VkRenderPass renderPass,
