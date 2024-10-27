@@ -27,7 +27,13 @@ public:
     getAttributeDescriptions();
   };
 
-  VlknModel(VlknDevice &device, const std::vector<Vertex> &vertices);
+  struct Builder {
+    std::vector<Vertex> vertices{};
+
+    std::vector<std::uint32_t> indices{};
+  };
+
+  VlknModel(VlknDevice &device, const Builder &builder);
   ~VlknModel();
 
   VlknModel(const VlknModel &) = delete;
@@ -38,11 +44,18 @@ public:
 
 private:
   void createVertexBuffers(const std::vector<Vertex> &vertices);
+  void createIndexBuffers(const std::vector<std::uint32_t> &indices);
 
   VlknDevice &vlknDevice;
+
   VkBuffer vertexBuffer;
   VkDeviceMemory vertexBufferMemory;
-  uint32_t vertexCount;
+  std::uint32_t vertexCount;
+
+  bool hasIndexBuffer = false;
+  VkBuffer indexBuffer;
+  VkDeviceMemory indexBufferMemory;
+  std::uint32_t indexCount;
 };
 
 } // namespace vlkn
