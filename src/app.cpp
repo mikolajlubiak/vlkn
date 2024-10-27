@@ -10,6 +10,7 @@
 #include "vlkn_game_object.hpp"
 #include "vlkn_model.hpp"
 #include "vlkn_renderer.hpp"
+#include "vlkn_utils.hpp"
 
 // libs
 #include <GLFW/glfw3.h>
@@ -70,23 +71,7 @@ void App::run() {
       accumulator -= tickrate;
     }
 
-    // look at gameObj
-    // see docs/look_at_rotation_vector
-    if (keyboardController.isKeyPressed(GLFW_KEY_1)) {
-      glm::vec3 direction =
-          glm::normalize(gameObjects[0].transform.translation -
-                         viewerObject.transform.translation);
-
-      float yaw = std::atan2(direction.x, direction.z);
-
-      float pitch = -std::asin(direction.y);
-
-      pitch = glm::clamp(pitch, glm::radians(-89.0f), glm::radians(89.0f));
-
-      yaw = glm::mod(yaw, glm::two_pi<decltype(yaw)>());
-
-      viewerObject.transform.rotation = glm::vec3(pitch, yaw, 0.0f);
-    }
+    keyboardController.lookAt(gameObjects);
 
     camera.setViewYXZ(viewerObject.transform.translation,
                       viewerObject.transform.rotation);
@@ -107,16 +92,25 @@ void App::run() {
 }
 
 void App::loadGameObjects() {
-  std::shared_ptr<VlknModel> objModel =
+  std::shared_ptr<VlknModel> flatVaseModel =
+      VlknModel::createModelFromFile(vlknDevice, "models/flat_vase.obj");
+
+  std::shared_ptr<VlknModel> smoothVaseModel =
       VlknModel::createModelFromFile(vlknDevice, "models/smooth_vase.obj");
 
-  VlknGameObject gameObj = VlknGameObject::createGameObject();
-  gameObj.model = objModel;
-  gameObj.transform.translation = {0.0f, 0.0f, 2.0f};
-  gameObj.transform.scale = glm::vec3(3.0f);
-  ;
+  VlknGameObject flatVase = VlknGameObject::createGameObject();
+  flatVase.model = flatVaseModel;
+  flatVase.transform.translation = {0.0f, 0.0f, 2.0f};
+  flatVase.transform.scale = glm::vec3(3.0f, 2.0f, 3.0f);
 
-  gameObjects.push_back(std::move(gameObj));
+  gameObjects.push_back(std::move(flatVase));
+
+  VlknGameObject smoothVase = VlknGameObject::createGameObject();
+  smoothVase.model = smoothVaseModel;
+  smoothVase.transform.translation = {1.0f, 0.0f, 2.0f};
+  smoothVase.transform.scale = glm::vec3(3.0f);
+
+  gameObjects.push_back(std::move(smoothVase));
 }
 
 } // namespace vlkn

@@ -69,6 +69,30 @@ void KeyboardMovementController::move(const float step) {
   }
 }
 
+// lock camera on game objects
+// see docs/look_at_rotation_vector
+void KeyboardMovementController::lookAt(
+    const std::vector<VlknGameObject> &gameObjects) {
+  glm::vec3 direction{};
+  for (auto i = GLFW_KEY_1; i < GLFW_KEY_1 + gameObjects.size(); i++) {
+    if (keys[i]) {
+      direction =
+          glm::normalize(gameObjects[i - GLFW_KEY_1].transform.translation -
+                         viewerObject.transform.translation);
+    }
+  }
+
+  if (nonZeroVector(direction)) {
+    float yaw = std::atan2(direction.x, direction.z);
+    float pitch = -std::asin(direction.y);
+
+    pitch = glm::clamp(pitch, glm::radians(-89.0f), glm::radians(89.0f));
+    yaw = glm::mod(yaw, glm::two_pi<decltype(yaw)>());
+
+    viewerObject.transform.rotation = glm::vec3(pitch, yaw, 0.0f);
+  }
+}
+
 std::unordered_map<uint32_t, bool> KeyboardMovementController::keys{};
 
 } // namespace vlkn

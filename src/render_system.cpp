@@ -24,7 +24,7 @@ namespace vlkn {
 
 struct PushConstantData {
   glm::mat4 transform{1.0f};
-  alignas(16) glm::vec3 color;
+  alignas(16) glm::mat4 normalMatrix{1.0f};
 };
 
 RenderSystem::RenderSystem(VlknDevice &device, VkRenderPass renderPass)
@@ -79,8 +79,9 @@ void RenderSystem::renderGameObjects(VkCommandBuffer commandBuffer,
 
   for (VlknGameObject &obj : gameObjects) {
     PushConstantData push{};
-    push.color = obj.color;
-    push.transform = projectionView * obj.transform.mat4();
+    auto modelMatrix = obj.transform.mat4();
+    push.normalMatrix = obj.transform.normalMatrix();
+    push.transform = projectionView * modelMatrix;
 
     vkCmdPushConstants(commandBuffer, pipelineLayout,
                        VK_SHADER_STAGE_VERTEX_BIT |
