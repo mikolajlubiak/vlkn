@@ -2,7 +2,7 @@
 #include "mouse_movement_controller.hpp"
 
 // local
-#include "common.hpp"
+#include "vlkn_utils.hpp"
 
 // libs
 #define GLM_FORCE_RADIANS

@@ -8,7 +8,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Gather source and header files
 file(GLOB_RECURSE vlkn_SOURCES CONFIGURE_DEPENDS "src/*.cpp")
 file(GLOB_RECURSE vlkn_HEADERS CONFIGURE_DEPENDS "src/*.hpp")
-file(GLOB_RECURSE SHADER_SOURCES CONFIGURE_DEPENDS "shaders/shader.*")
+file(GLOB_RECURSE vlkn_SHADERS CONFIGURE_DEPENDS "shaders/shader.*")
+file (GLOB_RECURSE vlkn_MODELS CONFIGURE_DEPENDS "models/*.obj")
 
 # Set include directories
 set(vlkn_INCLUDE_DIRS "")
@@ -27,7 +28,7 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E make_directory shaders
     COMMAND glslc -O ../shaders/shader.vert -o shaders/vert.spv
     COMMAND glslc -O ../shaders/shader.frag -o shaders/frag.spv
-    DEPENDS ${SHADER_SOURCES}
+    DEPENDS ${vlkn_SHADERS}
     COMMENT "Compiling shaders"
 )
 
@@ -36,6 +37,12 @@ include(FindPkgConfig)
 find_package(glm CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
 find_package(glfw3 REQUIRED)
+
+# Copy models to build directory
+foreach (_model ${vlkn_MODELS})
+	file(RELATIVE_PATH _relative_path ${CMAKE_SOURCE_DIR}/models ${_model})
+	configure_file(${_model} ${CMAKE_BINARY_DIR}/${_relative_path} COPYONLY)
+endforeach()
 
 # Create executable
 add_executable(${PROJECT_NAME} ${vlkn_SOURCES})

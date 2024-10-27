@@ -1,11 +1,37 @@
+// header
 #include "vlkn_model.hpp"
 
+// local
+#include "vlkn_utils.hpp"
+
+// libs
+// tinyobjloader
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "tiny_obj_loader.h"
+// glm
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/fwd.hpp>
+#include <glm/gtx/hash.hpp>
+// vulkan
+#include <vulkan/vulkan_core.h>
+
+// std
 #include <cassert>
 #include <cstdint>
 #include <cstring>
-#include <glm/fwd.hpp>
+#include <unordered_map>
 #include <vector>
-#include <vulkan/vulkan_core.h>
+
+namespace std {
+template <> struct hash<vlkn::VlknModel::Vertex> {
+  size_t operator()(vlkn::VlknModel::Vertex const &vertex) const {
+    size_t seed = 0;
+    vlkn::hashCombine(seed, vertex.position, vertex.color, vertex.normal,
+                      vertex.uv);
+    return seed;
+  }
+};
+} // namespace std
 
 namespace vlkn {
 
@@ -22,6 +48,15 @@ VlknModel::~VlknModel() {
     vkDestroyBuffer(vlknDevice.device(), indexBuffer, nullptr);
     vkFreeMemory(vlknDevice.device(), indexBufferMemory, nullptr);
   }
+}
+
+std::unique_ptr<VlknModel>
+VlknModel::createModelFromFile(VlknDevice &device,
+                               const std::filesystem::path &path) {
+  Builder builder{};
+  builder.loadModel(path);
+
+  return std::make_unique<VlknModel>(device, builder);
 }
 
 void VlknModel::createVertexBuffers(const std::vector<Vertex> &vertices) {
@@ -137,5 +172,70 @@ VlknModel::Vertex::Vertex(glm::vec3 pos, glm::vec3 col)
     : position(pos), color(col) {}
 
 VlknModel::Vertex::Vertex(glm::vec3 pos) : position(pos) {}
+
+void VlknModel::Builder::loadModel(const std::filesystem::path &path) {
+  tinyobj::attrib_t attrib;
+  std::vector<tinyobj::shape_t> shapes;
+  std::vector<tinyobj::material_t> materials;
+  std::string warn, error;
+
+  if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &error,
+                        path.c_str())) {
+    throw std::runtime_error(warn + error);
+  }
+
+  vertices.clear();
+  indices.clear();
+
+  std::unordered_map<Vertex, std::uint32_t> uniqueVertices{};
+
+  for (const auto &shape : shapes) {
+    for (const auto &index : shape.mesh.indices) {
+      Vertex vertex{};
+
+      if (index.vertex_index >= 0) {
+        vertex.position = {
+            attrib.vertices[3 * index.vertex_index + 0],
+            attrib.vertices[3 * index.vertex_index + 1],
+            attrib.vertices[3 * index.vertex_index + 2],
+        };
+
+        auto colorIndex = 3 * index.vertex_index + 2;
+
+        if (colorIndex < attrib.colors.size()) {
+          vertex.color = {
+              attrib.colors[colorIndex - 2],
+              attrib.colors[colorIndex - 1],
+              attrib.colors[colorIndex - 0],
+          };
+        } else {
+          vertex.color = glm::vec3(1.0f);
+        }
+      }
+
+      if (index.normal_index >= 0) {
+        vertex.normal = {
+            attrib.normals[3 * index.normal_index + 0],
+            attrib.normals[3 * index.normal_index + 1],
+            attrib.normals[3 * index.normal_index + 2],
+        };
+      }
+
+      if (index.texcoord_index >= 0) {
+        vertex.uv = {
+            attrib.texcoords[2 * index.texcoord_index + 0],
+            attrib.texcoords[2 * index.texcoord_index + 1],
+        };
+      }
+
+      if (uniqueVertices.count(vertex) == 0) {
+        uniqueVertices[vertex] = static_cast<std::uint32_t>(vertices.size());
+        vertices.push_back(vertex);
+      }
+
+      indices.push_back(uniqueVertices[vertex]);
+    }
+  }
+}
 
 } // namespace vlkn

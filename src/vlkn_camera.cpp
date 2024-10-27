@@ -2,7 +2,7 @@
 #include "vlkn_camera.hpp"
 
 // local
-#include "common.hpp"
+#include "vlkn_utils.hpp"
 
 // std
 #include <cassert>
