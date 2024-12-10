@@ -179,8 +179,20 @@ void App::loadGameObjects() {
 
   gameObjects.emplace(floor.getId(), std::move(floor));
 
-  VlknGameObject pointLight = VlknGameObject::makePointLight(0.1f);
-  gameObjects.emplace(pointLight.getId(), std::move(pointLight));
+  std::vector<glm::vec3> lightColors{{1.f, .1f, .1f}, {.1f, .1f, 1.f},
+                                     {.1f, 1.f, .1f}, {1.f, 1.f, .1f},
+                                     {.1f, 1.f, 1.f}, {1.f, 1.f, 1.f}};
+
+  for (std::size_t i = 0; i < lightColors.size(); i++) {
+    VlknGameObject pointLight = VlknGameObject::makePointLight(0.1f);
+    pointLight.color = lightColors[i];
+    glm::mat4 rotateLight = glm::rotate(
+        glm::mat4(1.0f), i * glm::two_pi<float>() / lightColors.size(),
+        {0.0f, -1.0f, 0.0f});
+    pointLight.transform.translation =
+        glm::vec3(rotateLight * glm::vec4(-1.0f, -1.0f, -1.0f, 1.0f));
+    gameObjects.emplace(pointLight.getId(), std::move(pointLight));
+  }
 }
 
 } // namespace vlkn
