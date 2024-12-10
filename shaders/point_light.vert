@@ -23,12 +23,9 @@ const float LIGHT_RADIUS = 0.1;
 
 void main() {
   fragOffset = OFFSETS[gl_VertexIndex];
-  vec3 cameraRightWorld = {ubo.view[0][0], ubo.view[1][0], ubo.view[2][0]};
-  vec3 cameraUpWorld = {ubo.view[0][1], ubo.view[1][1], ubo.view[2][1]};
 
-  vec3 positionWorld = ubo.lightPosition.xyz
-    + LIGHT_RADIUS * fragOffset.x * cameraRightWorld
-    + LIGHT_RADIUS * fragOffset.y * cameraUpWorld;
+  vec4 lightPosInCamera = ubo.view * vec4(ubo.lightPosition, 1.0);
+  vec4 positionInCamera = lightPosInCamera + LIGHT_RADIUS * vec4(fragOffset, 0.0, 0.0);
     
-    gl_Position = ubo.projection * ubo.view * vec4(positionWorld, 1.0);
+  gl_Position = ubo.projection * positionInCamera;
 }
