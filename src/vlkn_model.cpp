@@ -146,7 +146,7 @@ VlknModel::Vertex::getAttributeDescriptions() {
       {2, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, normal)});
 
   attributeDescriptions.push_back(
-      {3, 1, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, uv)});
+      {3, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, uv)});
 
   return attributeDescriptions;
 }
