@@ -74,15 +74,16 @@ void RenderSystem::createPipeline(VkRenderPass renderPass) {
       vlknDevice, "shaders/vert.spv", "shaders/frag.spv", pipelineConfig);
 }
 
-void RenderSystem::renderGameObjects(FrameInfo &frameInfo,
-                                     std::vector<VlknGameObject> &gameObjects) {
+void RenderSystem::renderGameObjects(FrameInfo &frameInfo) {
   vlknPipeline->bind(frameInfo.commandBuffer);
 
   vkCmdBindDescriptorSets(frameInfo.commandBuffer,
                           VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,
                           &frameInfo.globalDescriptorSet, 0, nullptr);
 
-  for (VlknGameObject &obj : gameObjects) {
+  for (auto &kv : frameInfo.gameObjects) {
+    VlknGameObject &obj = kv.second;
+
     PushConstantData push{};
     push.normalMatrix = obj.transform.normalMatrix();
     push.modelMatrix = obj.transform.mat4();

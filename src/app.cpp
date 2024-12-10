@@ -81,9 +81,6 @@ void App::run() {
   VlknGameObject viewerObject = VlknGameObject::createGameObject();
   viewerObject.transform.translation.z = -2.0f;
 
-  camera.setViewTarget(glm::vec3(0.0f, 0.0f, 0.0f),
-                       gameObjects[0].transform.translation);
-
   KeyboardMovementController keyboardController{viewerObject};
   MouseMovementController mouseController{viewerObject};
 
@@ -123,12 +120,14 @@ void App::run() {
 
     if (auto commandBuffer = vlknRenderer.beginFrame()) {
       std::uint32_t frameIndex = vlknRenderer.getFrameIndex();
-      FrameInfo frameInfo{.frameIndex = frameIndex,
-                          .frameTime = deltaTime,
-                          .commandBuffer = commandBuffer,
-                          .camera = camera,
-                          .globalDescriptorSet =
-                              globalDescriptorSets[frameIndex]};
+      FrameInfo frameInfo{
+          .frameIndex = frameIndex,
+          .frameTime = deltaTime,
+          .commandBuffer = commandBuffer,
+          .camera = camera,
+          .globalDescriptorSet = globalDescriptorSets[frameIndex],
+          .gameObjects = gameObjects,
+      };
 
       // update stage
       GlobalUbo ubo{};
@@ -138,7 +137,7 @@ void App::run() {
 
       // render stage
       vlknRenderer.beginSwapChainRenderPass(commandBuffer);
-      renderSystem.renderGameObjects(frameInfo, gameObjects);
+      renderSystem.renderGameObjects(frameInfo);
       vlknRenderer.endSwapChainRenderPass(commandBuffer);
       vlknRenderer.endFrame();
     }
@@ -159,24 +158,24 @@ void App::loadGameObjects() {
 
   VlknGameObject flatVase = VlknGameObject::createGameObject();
   flatVase.model = flatVaseModel;
-  flatVase.transform.translation = {-0.5f, 0.0f, 0.0f};
+  flatVase.transform.translation = {-2.5f, 0.0f, 0.0f};
   flatVase.transform.scale = glm::vec3(3.0f, 2.0f, 3.0f);
 
-  gameObjects.push_back(std::move(flatVase));
+  gameObjects.emplace(flatVase.getId(), std::move(flatVase));
 
   VlknGameObject smoothVase = VlknGameObject::createGameObject();
   smoothVase.model = smoothVaseModel;
   smoothVase.transform.translation = {0.5f, 0.0f, 0.0f};
   smoothVase.transform.scale = glm::vec3(4.0f);
 
-  gameObjects.push_back(std::move(smoothVase));
+  gameObjects.emplace(smoothVase.getId(), std::move(smoothVase));
 
   VlknGameObject floor = VlknGameObject::createGameObject();
   floor.model = floorModel;
   floor.transform.translation = {0.0f, 0.0f, 0.0f};
   floor.transform.scale = glm::vec3(16.0f, 1.0f, 16.0f);
 
-  gameObjects.push_back(std::move(floor));
+  gameObjects.emplace(floor.getId(), std::move(floor));
 }
 
 } // namespace vlkn

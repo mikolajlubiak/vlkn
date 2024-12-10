@@ -41,7 +41,7 @@ private:
 
   std::unique_ptr<VlknDescriptorPool> globalPool{};
 
-  std::vector<VlknGameObject> gameObjects;
+  VlknGameObject::Map gameObjects;
 };
 
 } // namespace vlkn

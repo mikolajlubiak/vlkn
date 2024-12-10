@@ -2,6 +2,7 @@
 
 // local
 #include "vlkn_camera.hpp"
+#include "vlkn_game_object.hpp"
 
 // libs
 #include <vulkan/vulkan.h>
@@ -14,6 +15,7 @@ struct FrameInfo {
   VkCommandBuffer commandBuffer;
   VlknCamera &camera;
   VkDescriptorSet globalDescriptorSet;
+  VlknGameObject::Map &gameObjects;
 };
 
 } // namespace vlkn

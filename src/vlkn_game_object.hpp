@@ -1,11 +1,16 @@
 #pragma once
 
+// local
 #include "vlkn_model.hpp"
 
-#include <cstdint>
+// lib
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
+// std
+#include <cstdint>
 #include <memory>
+#include <unordered_map>
 
 namespace vlkn {
 
@@ -21,6 +26,7 @@ struct TransformComponent {
 class VlknGameObject {
 public:
   using id_t = uint32_t;
+  using Map = std::unordered_map<id_t, VlknGameObject>;
 
   static VlknGameObject createGameObject() {
     static id_t current_id = 0;

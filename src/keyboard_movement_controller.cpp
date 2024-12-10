@@ -72,13 +72,13 @@ void KeyboardMovementController::move(const float step) {
 // lock camera on game objects
 // see docs/look_at_rotation_vector
 void KeyboardMovementController::lookAt(
-    const std::vector<VlknGameObject> &gameObjects) {
+    const VlknGameObject::Map &gameObjects) {
   glm::vec3 direction{};
-  for (auto i = GLFW_KEY_1; i < GLFW_KEY_1 + gameObjects.size(); i++) {
-    if (keys[i]) {
-      direction =
-          glm::normalize(gameObjects[i - GLFW_KEY_1].transform.translation -
-                         viewerObject.transform.translation);
+  for (auto i = GLFW_KEY_1; i < GLFW_KEY_9; i++) {
+    const VlknGameObject::id_t id = i - GLFW_KEY_0;
+    if (keys[i] && gameObjects.find(id) != gameObjects.end()) {
+      direction = glm::normalize(gameObjects.at(id).transform.translation -
+                                 viewerObject.transform.translation);
     }
   }
 

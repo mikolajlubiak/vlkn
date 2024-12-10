@@ -34,7 +34,7 @@ public:
 
   // lock camera on game objects
   // see docs/look_at_rotation_vector
-  void lookAt(const std::vector<VlknGameObject> &gameObjects);
+  void lookAt(const VlknGameObject::Map &gameObjects);
 
   static void keyboardCallback(GLFWwindow *const window, const int key,
                                const int scancode, const int action,
