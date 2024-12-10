@@ -59,10 +59,11 @@ void App::run() {
     uboBuffers[i]->map();
   }
 
-  auto globalSetLayout = VlknDescriptorSetLayout::Builder(vlknDevice)
-                             .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                                         VK_SHADER_STAGE_VERTEX_BIT)
-                             .build();
+  auto globalSetLayout =
+      VlknDescriptorSetLayout::Builder(vlknDevice)
+          .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                      VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
+          .build();
 
   std::vector<VkDescriptorSet> globalDescriptorSets(
       VlknSwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -173,7 +174,7 @@ void App::loadGameObjects() {
   VlknGameObject floor = VlknGameObject::createGameObject();
   floor.model = floorModel;
   floor.transform.translation = {0.0f, 0.0f, 0.0f};
-  floor.transform.scale = glm::vec3(2.0f, 1.0f, 2.0f);
+  floor.transform.scale = glm::vec3(16.0f, 1.0f, 16.0f);
 
   gameObjects.push_back(std::move(floor));
 }
