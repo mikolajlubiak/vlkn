@@ -4,7 +4,8 @@
 // local
 #include "keyboard_movement_controller.hpp"
 #include "mouse_movement_controller.hpp"
-#include "render_system.hpp"
+#include "systems/point_light_system.hpp"
+#include "systems/render_system.hpp"
 #include "vlkn_buffer.hpp"
 #include "vlkn_camera.hpp"
 #include "vlkn_device.hpp"
@@ -78,6 +79,11 @@ void App::run() {
 
   RenderSystem renderSystem{vlknDevice, vlknRenderer.getSwapChainRenderPass(),
                             globalSetLayout->getDescriptorSetLayout()};
+
+  PointLightSystem pointLightSystem{vlknDevice,
+                                    vlknRenderer.getSwapChainRenderPass(),
+                                    globalSetLayout->getDescriptorSetLayout()};
+
   VlknCamera camera{};
   VlknGameObject viewerObject = VlknGameObject::createGameObject();
   viewerObject.transform.translation = {0.0f, -1.0f, -2.0f};
@@ -140,6 +146,7 @@ void App::run() {
       // render stage
       vlknRenderer.beginSwapChainRenderPass(commandBuffer);
       renderSystem.renderGameObjects(frameInfo);
+      pointLightSystem.render(frameInfo);
       vlknRenderer.endSwapChainRenderPass(commandBuffer);
       vlknRenderer.endFrame();
     }
