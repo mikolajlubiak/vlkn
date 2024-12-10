@@ -29,8 +29,9 @@ namespace vlkn {
 
 struct GlobalUbo {
   alignas(16) glm::mat4 projectionView{1.0f};
-  alignas(16) glm::vec3 lightDirection = glm::normalize(glm::vec3(1.0f, -3.0f,
-                                                                  -1.0f));
+  alignas(16) glm::vec4 ambientLightColor{1.0f, 1.0f, 1.0f, 0.02f};
+  alignas(16) glm::vec3 lightPosition{-1.0f};
+  alignas(16) glm::vec4 lightColor{1.0f};
 };
 
 App::App() {
@@ -77,6 +78,7 @@ void App::run() {
                             globalSetLayout->getDescriptorSetLayout()};
   VlknCamera camera{};
   VlknGameObject viewerObject = VlknGameObject::createGameObject();
+  viewerObject.transform.translation.z = -2.0f;
 
   camera.setViewTarget(glm::vec3(0.0f, 0.0f, 0.0f),
                        gameObjects[0].transform.translation);
@@ -151,19 +153,29 @@ void App::loadGameObjects() {
   std::shared_ptr<VlknModel> smoothVaseModel =
       VlknModel::createModelFromFile(vlknDevice, "models/smooth_vase.obj");
 
+  std::shared_ptr<VlknModel> floorModel =
+      VlknModel::createModelFromFile(vlknDevice, "models/quad.obj");
+
   VlknGameObject flatVase = VlknGameObject::createGameObject();
   flatVase.model = flatVaseModel;
-  flatVase.transform.translation = {0.0f, 0.0f, 2.0f};
+  flatVase.transform.translation = {-0.5f, 0.0f, 0.0f};
   flatVase.transform.scale = glm::vec3(3.0f, 2.0f, 3.0f);
 
   gameObjects.push_back(std::move(flatVase));
 
   VlknGameObject smoothVase = VlknGameObject::createGameObject();
   smoothVase.model = smoothVaseModel;
-  smoothVase.transform.translation = {1.0f, 0.0f, 2.0f};
-  smoothVase.transform.scale = glm::vec3(3.0f);
+  smoothVase.transform.translation = {0.5f, 0.0f, 0.0f};
+  smoothVase.transform.scale = glm::vec3(4.0f);
 
   gameObjects.push_back(std::move(smoothVase));
+
+  VlknGameObject floor = VlknGameObject::createGameObject();
+  floor.model = floorModel;
+  floor.transform.translation = {0.0f, 0.0f, 0.0f};
+  floor.transform.scale = glm::vec3(2.0f, 1.0f, 2.0f);
+
+  gameObjects.push_back(std::move(floor));
 }
 
 } // namespace vlkn
