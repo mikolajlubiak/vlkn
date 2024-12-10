@@ -29,5 +29,5 @@ void main() {
     discard;
   }
 
-  outColor = vec4(push.color.xyz, 1.0);
+  outColor = vec4(push.color.xyz * push.color.w, 1.0);
 }

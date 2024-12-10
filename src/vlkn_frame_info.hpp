@@ -29,6 +29,7 @@ struct GlobalUbo {
 
 struct FrameInfo {
   std::uint32_t frameIndex;
+  float frameDelta;
   float frameTime;
   VkCommandBuffer commandBuffer;
   VlknCamera &camera;

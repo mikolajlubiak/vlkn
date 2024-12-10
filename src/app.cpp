@@ -121,7 +121,8 @@ void App::run() {
       std::uint32_t frameIndex = vlknRenderer.getFrameIndex();
       FrameInfo frameInfo{
           .frameIndex = frameIndex,
-          .frameTime = deltaTime,
+          .frameDelta = deltaTime,
+          .frameTime = nowTime,
           .commandBuffer = commandBuffer,
           .camera = camera,
           .globalDescriptorSet = globalDescriptorSets[frameIndex],
