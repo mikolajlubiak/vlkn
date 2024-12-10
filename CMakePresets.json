@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "configurePresets": [
+    {
+      "name": "default",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build"
+    },
+    {
+      "name": "debug",
+      "inherits": "default",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    }
+  ]
+}

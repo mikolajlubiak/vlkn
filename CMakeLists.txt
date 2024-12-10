@@ -38,7 +38,7 @@ endforeach()
 # Compile shaders
 foreach(_shader ${vlkn_SHADERS})
   get_filename_component(_file_name ${_shader} NAME)
-  set(_spirv ${CMAKE_BINARY_DIR}/"shaders/${_file_name}.spv")
+  set(_spirv ${CMAKE_BINARY_DIR}/shaders/${_file_name}.spv)
 
   add_custom_command(
     OUTPUT ${_spirv}

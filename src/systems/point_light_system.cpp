@@ -64,6 +64,8 @@ void PointLightSystem::createPipeline(VkRenderPass renderPass) {
 
   PipelineConfigInfo pipelineConfig{};
   VlknPipeline::defaultPipelineConfigInfo(pipelineConfig);
+  pipelineConfig.bindingDescriptions.clear();
+  pipelineConfig.attributeDescriptions.clear();
   pipelineConfig.renderPass = renderPass;
   pipelineConfig.pipelineLayout = pipelineLayout;
   vlknPipeline = std::make_unique<VlknPipeline>(

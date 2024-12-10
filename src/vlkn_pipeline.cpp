@@ -1,6 +1,13 @@
+// header
 #include "vlkn_pipeline.hpp"
+
+// local
 #include "vlkn_model.hpp"
 
+// lib
+#include <vulkan/vulkan_core.h>
+
+// std
 #include <cstdint>
 #include <fstream>
 #include <ios>
@@ -8,7 +15,6 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 
 namespace vlkn {
 
@@ -69,18 +75,16 @@ void VlknPipeline::createGraphicsPipeline(
   shaderStages[1].pNext = nullptr;
   shaderStages[1].pSpecializationInfo = nullptr;
 
-  std::vector<VkVertexInputBindingDescription> bindingDescriptions =
-      VlknModel::Vertex::getBindingDescriptions();
-  std::vector<VkVertexInputAttributeDescription> attributeDescriptions =
-      VlknModel::Vertex::getAttributeDescriptions();
+  auto &bindingDescriptions = configInfo.bindingDescriptions;
+  auto &attributeDescriptions = configInfo.attributeDescriptions;
 
   VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
   vertexInputInfo.sType =
       VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
   vertexInputInfo.vertexAttributeDescriptionCount =
-      static_cast<uint32_t>(attributeDescriptions.size());
+      static_cast<std::uint32_t>(attributeDescriptions.size());
   vertexInputInfo.vertexBindingDescriptionCount =
-      static_cast<uint32_t>(bindingDescriptions.size());
+      static_cast<std::uint32_t>(bindingDescriptions.size());
   vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
   vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
 
@@ -201,6 +205,10 @@ void VlknPipeline::defaultPipelineConfigInfo(PipelineConfigInfo &configInfo) {
   configInfo.dynamicStateInfo.dynamicStateCount =
       static_cast<uint32_t>(configInfo.dynamicStateEnables.size());
   configInfo.dynamicStateInfo.flags = 0;
+
+  configInfo.bindingDescriptions = VlknModel::Vertex::getBindingDescriptions();
+  configInfo.attributeDescriptions =
+      VlknModel::Vertex::getAttributeDescriptions();
 }
 
 void VlknPipeline::bind(VkCommandBuffer commandBuffer) {
