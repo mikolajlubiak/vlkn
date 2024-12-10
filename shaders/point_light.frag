@@ -12,5 +12,11 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
 } ubo;
 
 void main() {
+  float distance = sqrt(dot(fragOffset, fragOffset));
+
+  if (distance > 1.0) {
+    discard;
+  }
+
   outColor = vec4(ubo.lightColor.xyz, 1.0);
 }
