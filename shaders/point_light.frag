@@ -3,13 +3,24 @@
 layout (location = 0) in vec2 fragOffset;
 layout (location = 0) out vec4 outColor;
 
+struct PointLight {
+  vec4 position;
+  vec4 color;
+};
+
 layout(set = 0, binding = 0) uniform GlobalUbo {
   mat4 projection;
   mat4 view;
   vec4 ambientLightColor;
-  vec3 lightPosition;
-  vec4 lightColor;
+  PointLight pointLights[10];
+  uint lightsNum;
 } ubo;
+
+layout (push_constant) uniform Push {
+  vec4 position;
+  vec4 color;
+  float radius;
+} push;
 
 void main() {
   float distance = sqrt(dot(fragOffset, fragOffset));
@@ -18,5 +29,5 @@ void main() {
     discard;
   }
 
-  outColor = vec4(ubo.lightColor.xyz, 1.0);
+  outColor = vec4(push.color.xyz, 1.0);
 }

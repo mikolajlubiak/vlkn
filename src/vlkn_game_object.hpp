@@ -23,6 +23,10 @@ struct TransformComponent {
   glm::mat3 normalMatrix();
 };
 
+struct PointLightComponent {
+  float lightIntensity = 1.0f;
+};
+
 class VlknGameObject {
 public:
   using id_t = uint32_t;
@@ -33,6 +37,10 @@ public:
     return VlknGameObject{current_id++};
   }
 
+  static VlknGameObject makePointLight(float intensity = 1.0f,
+                                       float radius = 0.1f,
+                                       glm::vec3 color = glm::vec3(1.0f));
+
   VlknGameObject(const VlknGameObject &) = delete;
   VlknGameObject &operator=(const VlknGameObject &) = delete;
   VlknGameObject(VlknGameObject &&) = default;
@@ -40,9 +48,12 @@ public:
 
   id_t getId() const { return id; }
 
-  std::shared_ptr<VlknModel> model;
   glm::vec3 color{};
   TransformComponent transform{};
+
+  // Optional components
+  std::shared_ptr<VlknModel> model = nullptr;
+  std::unique_ptr<PointLightComponent> pointLight = nullptr;
 
 private:
   VlknGameObject(id_t objId) : id(objId) {};

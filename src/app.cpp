@@ -28,14 +28,6 @@
 
 namespace vlkn {
 
-struct GlobalUbo {
-  alignas(16) glm::mat4 projection{1.0f};
-  alignas(16) glm::mat4 view{1.0f};
-  alignas(16) glm::vec4 ambientLightColor{1.0f, 1.0f, 1.0f, 0.02f};
-  alignas(16) glm::vec3 lightPosition{-1.0f};
-  alignas(16) glm::vec4 lightColor{1.0f};
-};
-
 App::App() {
   globalPool = VlknDescriptorPool::Builder(vlknDevice)
                    .setMaxSets(VlknSwapChain::MAX_FRAMES_IN_FLIGHT)
@@ -140,6 +132,7 @@ void App::run() {
       GlobalUbo ubo{};
       ubo.projection = camera.getProjection();
       ubo.view = camera.getView();
+      pointLightSystem.update(frameInfo, ubo);
       uboBuffers[frameIndex]->writeToBuffer(&ubo);
       uboBuffers[frameIndex]->flush();
 
@@ -185,6 +178,9 @@ void App::loadGameObjects() {
   floor.transform.scale = glm::vec3(16.0f, 1.0f, 16.0f);
 
   gameObjects.emplace(floor.getId(), std::move(floor));
+
+  VlknGameObject pointLight = VlknGameObject::makePointLight(0.1f);
+  gameObjects.emplace(pointLight.getId(), std::move(pointLight));
 }
 
 } // namespace vlkn

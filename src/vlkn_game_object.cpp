@@ -63,4 +63,14 @@ glm::mat3 TransformComponent::normalMatrix() {
   };
 }
 
+VlknGameObject VlknGameObject::makePointLight(float intensity, float radius,
+                                              glm::vec3 color) {
+  VlknGameObject gameObj = VlknGameObject::createGameObject();
+  gameObj.color = color;
+  gameObj.transform.scale.x = radius;
+  gameObj.pointLight = std::make_unique<PointLightComponent>(intensity);
+
+  return gameObj;
+}
+
 } // namespace vlkn
