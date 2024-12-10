@@ -75,7 +75,7 @@ void KeyboardMovementController::lookAt(
     const VlknGameObject::Map &gameObjects) {
   glm::vec3 direction{};
   for (auto i = GLFW_KEY_1; i < GLFW_KEY_9; i++) {
-    const VlknGameObject::id_t id = i - GLFW_KEY_0;
+    const VlknGameObject::id_t id = i - GLFW_KEY_1;
     if (keys[i] && gameObjects.find(id) != gameObjects.end()) {
       direction = glm::normalize(gameObjects.at(id).transform.translation -
                                  viewerObject.transform.translation);

@@ -84,6 +84,9 @@ void RenderSystem::renderGameObjects(FrameInfo &frameInfo) {
   for (auto &kv : frameInfo.gameObjects) {
     VlknGameObject &obj = kv.second;
 
+    if (obj.model == nullptr)
+      continue;
+
     PushConstantData push{};
     push.normalMatrix = obj.transform.normalMatrix();
     push.modelMatrix = obj.transform.mat4();

@@ -79,7 +79,7 @@ void App::run() {
                             globalSetLayout->getDescriptorSetLayout()};
   VlknCamera camera{};
   VlknGameObject viewerObject = VlknGameObject::createGameObject();
-  viewerObject.transform.translation.z = -2.0f;
+  viewerObject.transform.translation = {0.0f, -1.0f, -2.0f};
 
   KeyboardMovementController keyboardController{viewerObject};
   MouseMovementController mouseController{viewerObject};
@@ -158,14 +158,14 @@ void App::loadGameObjects() {
 
   VlknGameObject flatVase = VlknGameObject::createGameObject();
   flatVase.model = flatVaseModel;
-  flatVase.transform.translation = {-2.5f, 0.0f, 0.0f};
+  flatVase.transform.translation = {-1.0f, 0.0f, 0.0f};
   flatVase.transform.scale = glm::vec3(3.0f, 2.0f, 3.0f);
 
   gameObjects.emplace(flatVase.getId(), std::move(flatVase));
 
   VlknGameObject smoothVase = VlknGameObject::createGameObject();
   smoothVase.model = smoothVaseModel;
-  smoothVase.transform.translation = {0.5f, 0.0f, 0.0f};
+  smoothVase.transform.translation = {1.0f, 0.0f, 0.0f};
   smoothVase.transform.scale = glm::vec3(4.0f);
 
   gameObjects.emplace(smoothVase.getId(), std::move(smoothVase));
