@@ -74,6 +74,8 @@ public:
 
   void freeDescriptors(std::vector<VkDescriptorSet> &descriptors) const;
 
+  VkDescriptorPool getDescriptorPool() { return descriptorPool; }
+
   void resetPool();
 
 private:

@@ -40,6 +40,7 @@ private:
   VlknRenderer vlknRenderer{vlknWindow, vlknDevice};
 
   std::unique_ptr<VlknDescriptorPool> globalPool{};
+  std::unique_ptr<VlknDescriptorPool> imguiPool{};
 
   VlknGameObject::Map gameObjects;
 };

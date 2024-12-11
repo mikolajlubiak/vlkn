@@ -21,11 +21,15 @@ public:
   static void scrollCallback(GLFWwindow *const window, const double xoffset,
                              const double yoffset);
 
+  static void setMouseSensitivity(const float sensitivity) {
+    mouseSensitivity = sensitivity;
+  }
+
 private:
   VlknGameObject &viewerObject;
 
-  static constexpr float mouseSensitivity{0.01f};
-  static constexpr float scrollSensitivity{0.1f};
+  static float mouseSensitivity;
+  static float scrollSensitivity;
 
   static float mouseLastX;
   static float mouseLastY;

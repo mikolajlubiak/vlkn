@@ -66,7 +66,8 @@ void PointLightSystem::createPipeline(VkRenderPass renderPass) {
       "shaders/point_light.frag.spv", pipelineConfig);
 }
 
-void PointLightSystem::update(FrameInfo &frameInfo, GlobalUbo &ubo) {
+void PointLightSystem::update(const FrameInfo &frameInfo,
+                              const glm::vec4 pointLightColor, GlobalUbo &ubo) {
   glm::mat4 rotateLight =
       glm::rotate(glm::mat4(1.0f), frameInfo.frameDelta, {0.0f, -1.0f, 0.0f});
   float lightIntensity = 0.5f * glm::sin(frameInfo.frameTime) + 1.0f;
@@ -86,7 +87,8 @@ void PointLightSystem::update(FrameInfo &frameInfo, GlobalUbo &ubo) {
       ubo.pointLights[lightIndex].position =
           glm::vec4(obj.transform.translation, 1.0f);
       ubo.pointLights[lightIndex].color =
-          glm::vec4(obj.color, obj.pointLight->lightIntensity);
+          glm::vec4(obj.color + glm::vec3(pointLightColor),
+                    obj.pointLight->lightIntensity + pointLightColor.w);
 
       lightIndex++;
     }
@@ -95,7 +97,8 @@ void PointLightSystem::update(FrameInfo &frameInfo, GlobalUbo &ubo) {
   ubo.lightsNum = lightIndex;
 }
 
-void PointLightSystem::render(FrameInfo &frameInfo) {
+void PointLightSystem::render(const FrameInfo &frameInfo,
+                              const glm::vec4 pointLightColor) {
   std::map<float, VlknGameObject::id_t> sorted;
 
   const glm::vec3 cameraPosition = frameInfo.camera.getPosition();
@@ -120,7 +123,8 @@ void PointLightSystem::render(FrameInfo &frameInfo) {
 
     PointLightPushConstants push{};
     push.position = glm::vec4(obj.transform.translation, 1.0f);
-    push.color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
+    push.color = glm::vec4(obj.color + glm::vec3(pointLightColor),
+                           obj.pointLight->lightIntensity + pointLightColor.w);
     push.radius = obj.transform.scale.x;
 
     vkCmdPushConstants(frameInfo.commandBuffer, pipelineLayout,

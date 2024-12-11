@@ -38,6 +38,8 @@ public:
   VlknDevice &operator=(VlknDevice &&) = delete;
 
   VkCommandPool getCommandPool() { return commandPool; }
+  VkInstance getInstance() { return instance; }
+  VkPhysicalDevice getPhysicalDevice() { return physicalDevice; }
   VkDevice device() { return device_; }
   VkSurfaceKHR surface() { return surface_; }
   VkQueue graphicsQueue() { return graphicsQueue_; }

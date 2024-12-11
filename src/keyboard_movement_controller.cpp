@@ -2,12 +2,15 @@
 #include "keyboard_movement_controller.hpp"
 
 // local
+#include "mouse_movement_controller.hpp"
 #include "vlkn_utils.hpp"
 
 // libs
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
+// imgui
+#include "imgui/imgui_impl_glfw.h"
 
 // std
 #include <limits>
@@ -18,6 +21,18 @@ void KeyboardMovementController::keyboardCallback(GLFWwindow *const window,
                                                   const int scancode,
                                                   const int action,
                                                   const int mods) {
+
+  if (action == GLFW_PRESS && key == GLFW_KEY_C) [[unlikely]] {
+    const bool imguiMode =
+        glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_NORMAL;
+
+    glfwSetInputMode(window, GLFW_CURSOR,
+                     imguiMode ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+
+    imguiMode ? MouseMovementController::setMouseSensitivity(0.01f)
+              : MouseMovementController::setMouseSensitivity(0.0f);
+  }
+
   switch (action) {
   case GLFW_PRESS:
     keys[key] = true;

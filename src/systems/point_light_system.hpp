@@ -28,8 +28,9 @@ public:
   PointLightSystem(const PointLightSystem &) = delete;
   PointLightSystem &operator=(const PointLightSystem &) = delete;
 
-  void update(FrameInfo &frameInfo, GlobalUbo &ubo);
-  void render(FrameInfo &frameInfo);
+  void update(const FrameInfo &frameInfo, const glm::vec4 pointLightColor,
+              GlobalUbo &ubo);
+  void render(const FrameInfo &frameInfo, const glm::vec4 pointLightColor);
 
 private:
   void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);

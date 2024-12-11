@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 include(CheckCXXCompilerFlag)
+include(FindPkgConfig)
 
 # Enable flag if supported
 function(enable_cxx_compiler_flag_if_supported flag)
@@ -18,6 +19,9 @@ function(enable_cxx_compiler_flag_if_supported flag)
         unset(flag_supported CACHE)
     endif()
 endfunction()
+
+set(ImGui_DIR "cmake-imgui/build/dist/lib/cmake")
+list(APPEND CMAKE_PREFIX_PATH ${ImGui_DIR})
 
 # Gather source and header files
 file(GLOB_RECURSE vlkn_SOURCES CONFIGURE_DEPENDS "src/*.cpp")
@@ -37,10 +41,10 @@ list(REMOVE_DUPLICATES vlkn_INCLUDE_DIRS)
 set(CMAKE_CXX_FLAGS_RELEASE_INIT "${CMAKE_CXX_FLAGS_RELEASE_INIT} - -Ofast -march=native -mtune=native -DNDEBUG")
 
 # Add library dependencies
-include(FindPkgConfig)
 find_package(glm CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
 find_package(glfw3 REQUIRED)
+find_package(ImGui CONFIG REQUIRED)
 
 # Copy models to build directory
 foreach (_model ${vlkn_MODELS})
@@ -76,8 +80,7 @@ add_custom_target(compile_shaders DEPENDS ${vlkn_SPIRV})
 add_dependencies(${PROJECT_NAME} compile_shaders)
 
 # Include directories
-include_directories(${vlkn_INCLUDE_DIRS} vulkan glfw glm)
+target_include_directories(${PROJECT_NAME} PRIVATE ${vlkn_INCLUDE_DIRS} vulkan glfw glm::glm ${IMGUI_DIR} ${IMGUI_DIR}/backends)
 
 # Link libraries
-target_link_libraries(${PROJECT_NAME} vulkan glfw glm::glm)
-
+target_link_libraries(${PROJECT_NAME} PRIVATE vulkan glfw glm::glm ImGui::imgui)

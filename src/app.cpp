@@ -15,6 +15,8 @@
 
 // libs
 // GLFW
+#define GLFW_INCLUDE_NONE
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 // GLM
 #define GLM_FORCE_RADIANS
@@ -24,11 +26,19 @@
 #include <glm/gtc/constants.hpp>
 // Vulkan
 #include <vulkan/vulkan_core.h>
+// imgui
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw.h"
+#include "imgui/imgui_impl_vulkan.h"
 
 // std
 #include <memory>
 #include <utility>
 #include <vector>
+
+#ifndef NDEBUG
+#define APP_USE_VULKAN_DEBUG_REPORT
+#endif
 
 namespace vlkn {
 
@@ -38,12 +48,52 @@ App::App() {
                    .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                 VlknSwapChain::MAX_FRAMES_IN_FLIGHT)
                    .build();
+  imguiPool =
+      VlknDescriptorPool::Builder(vlknDevice)
+          .setMaxSets(VlknSwapChain::MAX_FRAMES_IN_FLIGHT)
+          .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                       VlknSwapChain::MAX_FRAMES_IN_FLIGHT)
+          .setPoolFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)
+          .build();
 
   gameObjects.reserve(16);
   loadGameObjects();
+
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGuiIO &io = ImGui::GetIO();
+  (void)io;
+  io.ConfigFlags |=
+      ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+  ImGui::StyleColorsDark();
+  ImGui_ImplGlfw_InitForVulkan(vlknWindow.getGLFWwindow(), true);
+
+  ImGui_ImplVulkan_InitInfo init_info = {};
+  init_info.Instance = vlknDevice.getInstance();
+  init_info.PhysicalDevice = vlknDevice.getPhysicalDevice();
+  init_info.Device = vlknDevice.device();
+  init_info.QueueFamily = vlknDevice.findPhysicalQueueFamilies().graphicsFamily;
+  init_info.Queue = vlknDevice.graphicsQueue();
+  init_info.PipelineCache = VK_NULL_HANDLE;
+  init_info.DescriptorPool = imguiPool->getDescriptorPool();
+  init_info.RenderPass = vlknRenderer.getSwapChainRenderPass();
+  init_info.Subpass = 0;
+  init_info.MinImageCount = VlknSwapChain::MAX_FRAMES_IN_FLIGHT;
+  init_info.ImageCount = VlknSwapChain::MAX_FRAMES_IN_FLIGHT;
+  init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+  init_info.Allocator = VK_NULL_HANDLE;
+  init_info.CheckVkResultFn = nullptr;
+  ImGui_ImplVulkan_Init(&init_info);
+
+  ImGui_ImplVulkan_CreateFontsTexture();
 }
 
-App::~App() {}
+App::~App() {
+  ImGui_ImplVulkan_DestroyFontsTexture();
+  ImGui_ImplVulkan_Shutdown();
+  ImGui_ImplGlfw_Shutdown();
+  ImGui::DestroyContext();
+}
 
 void App::run() {
   std::vector<std::unique_ptr<VlknBuffer>> uboBuffers(
@@ -95,6 +145,8 @@ void App::run() {
 
   float aspectRatio = vlknRenderer.getAspectRatio();
 
+  ImVec4 pointLightColor{};
+
   while (!vlknWindow.shouldClose() && !keyboardController.shouldClose()) {
     glfwPollEvents();
 
@@ -133,19 +185,40 @@ void App::run() {
           .gameObjects = gameObjects,
       };
 
+      ImGui_ImplVulkan_NewFrame();
+      ImGui_ImplGlfw_NewFrame();
+      ImGui::NewFrame();
+
+      ImGuiIO &io = ImGui::GetIO();
+      ImGui::Begin("Frame time");
+      ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
+                  1000.0f / io.Framerate, io.Framerate);
+      ImGui::ColorPicker4("Point light color", (float *)&pointLightColor);
+      ImGui::End();
+
       // update stage
       GlobalUbo ubo{};
       ubo.projection = camera.getProjection();
       ubo.view = camera.getView();
       ubo.inverseView = camera.getInverseView();
-      pointLightSystem.update(frameInfo, ubo);
+      pointLightSystem.update(frameInfo,
+                              glm::vec4(pointLightColor.x, pointLightColor.y,
+                                        pointLightColor.z, pointLightColor.w),
+                              ubo);
       uboBuffers[frameIndex]->writeToBuffer(&ubo);
       uboBuffers[frameIndex]->flush();
 
       // render stage
       vlknRenderer.beginSwapChainRenderPass(commandBuffer);
+
       renderSystem.renderGameObjects(frameInfo);
-      pointLightSystem.render(frameInfo);
+      pointLightSystem.render(frameInfo,
+                              glm::vec4(pointLightColor.x, pointLightColor.y,
+                                        pointLightColor.z, pointLightColor.w));
+
+      ImGui::Render();
+      ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
+
       vlknRenderer.endSwapChainRenderPass(commandBuffer);
       vlknRenderer.endFrame();
     }

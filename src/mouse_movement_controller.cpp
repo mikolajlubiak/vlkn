@@ -53,5 +53,7 @@ float MouseMovementController::mouseOffsetX{};
 float MouseMovementController::mouseOffsetY{};
 float MouseMovementController::mouseLastX{};
 float MouseMovementController::mouseLastY{};
+float MouseMovementController::mouseSensitivity{0.01f};
+float MouseMovementController::scrollSensitivity{0.1f};
 
 } // namespace vlkn
