@@ -137,6 +137,7 @@ void App::run() {
       GlobalUbo ubo{};
       ubo.projection = camera.getProjection();
       ubo.view = camera.getView();
+      ubo.inverseView = camera.getInverseView();
       pointLightSystem.update(frameInfo, ubo);
       uboBuffers[frameIndex]->writeToBuffer(&ubo);
       uboBuffers[frameIndex]->flush();
@@ -195,7 +196,7 @@ void App::loadGameObjects() {
         glm::mat4(1.0f), i * glm::two_pi<float>() / lightColors.size(),
         {0.0f, -1.0f, 0.0f});
     pointLight.transform.translation =
-        glm::vec3(rotateLight * glm::vec4(-1.0f, -1.0f, -1.0f, 1.0f));
+        glm::vec3(rotateLight * glm::vec4(-1.0f, -2.0f, -1.0f, 1.0f));
     gameObjects.emplace(pointLight.getId(), std::move(pointLight));
   }
 }

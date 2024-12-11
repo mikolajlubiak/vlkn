@@ -25,10 +25,12 @@ public:
 
   const glm::mat4 &getProjection() const { return projectionMatrix; }
   const glm::mat4 &getView() const { return viewMatrix; }
+  const glm::mat4 &getInverseView() const { return inverseViewMatrix; }
 
 private:
   glm::mat4 projectionMatrix{1.0f};
   glm::mat4 viewMatrix{1.0f};
+  glm::mat4 inverseViewMatrix{1.0f};
 };
 
 } // namespace vlkn

@@ -22,6 +22,7 @@ struct PointLight {
 struct GlobalUbo {
   alignas(16) glm::mat4 projection{1.0f};
   alignas(16) glm::mat4 view{1.0f};
+  alignas(16) glm::mat4 inverseView{1.0f};
   alignas(16) glm::vec4 ambientLightColor{1.0f, 1.0f, 1.0f, 0.02f};
   alignas(16) std::array<PointLight, MAX_LIGHTS> pointLights{};
   alignas(16) std::size_t lightsNum = 0;
