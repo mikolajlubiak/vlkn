@@ -80,7 +80,7 @@ add_custom_target(compile_shaders DEPENDS ${vlkn_SPIRV})
 add_dependencies(${PROJECT_NAME} compile_shaders)
 
 # Include directories
-target_include_directories(${PROJECT_NAME} PRIVATE ${vlkn_INCLUDE_DIRS} vulkan glfw glm::glm ${IMGUI_DIR} ${IMGUI_DIR}/backends)
+target_include_directories(${PROJECT_NAME} PRIVATE ${vlkn_INCLUDE_DIRS} vulkan glfw glm::glm)
 
 # Link libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE vulkan glfw glm::glm ImGui::imgui)
