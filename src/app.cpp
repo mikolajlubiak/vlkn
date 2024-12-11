@@ -146,6 +146,7 @@ void App::run() {
   float aspectRatio = vlknRenderer.getAspectRatio();
 
   ImVec4 pointLightColor{};
+  ImGuiIO &io = ImGui::GetIO();
 
   while (!vlknWindow.shouldClose() && !keyboardController.shouldClose()) {
     glfwPollEvents();
@@ -189,7 +190,6 @@ void App::run() {
       ImGui_ImplGlfw_NewFrame();
       ImGui::NewFrame();
 
-      ImGuiIO &io = ImGui::GetIO();
       ImGui::Begin("Frame time");
       ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
                   1000.0f / io.Framerate, io.Framerate);
