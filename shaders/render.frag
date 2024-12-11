@@ -50,8 +50,8 @@ void main() {
     // specular
     vec3 halfAngle = normalize(normDirectionToLight + viewDirection);
     float blinnTerm = clamp(dot(surfaceNormal, halfAngle), 0.0, 1.0);
-    blinnTerm = pow(blinnTerm, 32.0);
-    specularLight += light.color.xyz * lightContribution * blinnTerm;
+    blinnTerm = pow(blinnTerm, 512.0);
+    specularLight += lightContribution * blinnTerm;
   }
 
   outColor = vec4((diffuseLight + specularLight) * fragColor, 1.0);
