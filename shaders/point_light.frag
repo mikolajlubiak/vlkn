@@ -32,5 +32,7 @@ void main() {
     discard;
   }
 
-  outColor = vec4(push.color.xyz * push.color.w, 0.5 * (cos(distance * PI) + 0.5));
+  float distanceCosine = 0.5 * (cos(distance * PI) + 0.5);
+
+  outColor = vec4(push.color.xyz * push.color.w + pow(distanceCosine, 2.0), distanceCosine);
 }
