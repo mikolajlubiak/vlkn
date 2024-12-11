@@ -54,6 +54,7 @@ void PointLightSystem::createPipeline(VkRenderPass renderPass) {
 
   PipelineConfigInfo pipelineConfig{};
   VlknPipeline::defaultPipelineConfigInfo(pipelineConfig);
+  VlknPipeline::enableAlphaBlending(pipelineConfig);
   pipelineConfig.bindingDescriptions.clear();
   pipelineConfig.attributeDescriptions.clear();
   pipelineConfig.renderPass = renderPass;
@@ -66,7 +67,7 @@ void PointLightSystem::createPipeline(VkRenderPass renderPass) {
 void PointLightSystem::update(FrameInfo &frameInfo, GlobalUbo &ubo) {
   glm::mat4 rotateLight =
       glm::rotate(glm::mat4(1.0f), frameInfo.frameDelta, {0.0f, -1.0f, 0.0f});
-  float lightIntensity = 0.1f + glm::abs(glm::sin(frameInfo.frameTime));
+  float lightIntensity = 0.5f * glm::sin(frameInfo.frameTime) + 0.6f;
 
   std::size_t lightIndex = 0;
 
