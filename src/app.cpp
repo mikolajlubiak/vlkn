@@ -14,14 +14,18 @@
 #include "vlkn_renderer.hpp"
 
 // libs
+// GLFW
 #include <GLFW/glfw3.h>
+// GLM
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/detail/qualifier.hpp>
 #include <glm/fwd.hpp>
 #include <glm/gtc/constants.hpp>
+// Vulkan
 #include <vulkan/vulkan_core.h>
 
 // std
-#include <bits/fs_fwd.h>
 #include <memory>
 #include <utility>
 #include <vector>

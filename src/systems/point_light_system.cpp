@@ -1,24 +1,8 @@
 // header
 #include "point_light_system.hpp"
 
-// local
-#include "vlkn_device.hpp"
-#include "vlkn_game_object.hpp"
-#include "vlkn_pipeline.hpp"
-
-// libs
-#include <GLFW/glfw3.h>
-#include <glm/detail/qualifier.hpp>
-#include <glm/fwd.hpp>
-#include <glm/gtc/constants.hpp>
-#include <vulkan/vulkan_core.h>
-
 // std
-#include <bits/fs_fwd.h>
 #include <cassert>
-#include <memory>
-#include <stdexcept>
-#include <vector>
 
 namespace vlkn {
 
@@ -82,14 +66,14 @@ void PointLightSystem::createPipeline(VkRenderPass renderPass) {
 void PointLightSystem::update(FrameInfo &frameInfo, GlobalUbo &ubo) {
   glm::mat4 rotateLight =
       glm::rotate(glm::mat4(1.0f), frameInfo.frameDelta, {0.0f, -1.0f, 0.0f});
-  float lightIntensity = glm::abs(glm::sin(frameInfo.frameTime));
+  float lightIntensity = 0.1f + glm::abs(glm::sin(frameInfo.frameTime));
 
   std::size_t lightIndex = 0;
 
   for (auto &kv : frameInfo.gameObjects) {
     auto &obj = kv.second;
     if (obj.pointLight != nullptr) {
-      assert(lightIndex < MAX_LIGHTS);
+      assert(lightIndex < MAX_LIGHTS && "Exceeded maximum point light count");
 
       obj.transform.translation =
           glm::vec3(rotateLight * glm::vec4(obj.transform.translation, 1.0f));

@@ -1,24 +1,8 @@
 // header
 #include "render_system.hpp"
 
-// local
-#include "vlkn_device.hpp"
-#include "vlkn_game_object.hpp"
-#include "vlkn_pipeline.hpp"
-
-// libs
-#include <GLFW/glfw3.h>
-#include <glm/detail/qualifier.hpp>
-#include <glm/fwd.hpp>
-#include <glm/gtc/constants.hpp>
-#include <vulkan/vulkan_core.h>
-
 // std
-#include <bits/fs_fwd.h>
 #include <cassert>
-#include <memory>
-#include <stdexcept>
-#include <vector>
 
 namespace vlkn {
 
