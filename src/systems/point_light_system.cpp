@@ -11,7 +11,6 @@ namespace vlkn {
 struct PointLightPushConstants {
   glm::vec4 position{};
   glm::vec4 color{};
-  float radius = 0.0f;
 };
 
 PointLightSystem::PointLightSystem(VlknDevice &device, VkRenderPass renderPass,
@@ -122,10 +121,9 @@ void PointLightSystem::render(const FrameInfo &frameInfo,
     auto &obj = frameInfo.gameObjects.at(it->second);
 
     PointLightPushConstants push{};
-    push.position = glm::vec4(obj.transform.translation, 1.0f);
+    push.position = glm::vec4(obj.transform.translation, obj.transform.scale.x);
     push.color = glm::vec4(obj.color + glm::vec3(pointLightColor),
                            obj.pointLight->lightIntensity + pointLightColor.w);
-    push.radius = obj.transform.scale.x;
 
     vkCmdPushConstants(frameInfo.commandBuffer, pipelineLayout,
                        VK_SHADER_STAGE_VERTEX_BIT |

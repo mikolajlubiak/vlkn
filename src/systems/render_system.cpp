@@ -7,8 +7,8 @@
 namespace vlkn {
 
 struct PushConstantData {
-  alignas(16) glm::mat4 modelMatrix{1.0f};
-  alignas(16) glm::mat4 normalMatrix{1.0f};
+  glm::mat4 modelMatrix{1.0f};
+  glm::mat4 normalMatrix{1.0f};
 };
 
 RenderSystem::RenderSystem(VlknDevice &device, VkRenderPass renderPass,
@@ -69,11 +69,12 @@ void RenderSystem::renderGameObjects(FrameInfo &frameInfo) {
   for (auto &kv : frameInfo.gameObjects) {
     VlknGameObject &obj = kv.second;
 
-    if (obj.model == nullptr)
+    if (obj.model == nullptr) {
       continue;
+    }
 
     PushConstantData push{};
-    push.normalMatrix = obj.transform.normalMatrix();
+    push.normalMatrix = glm::mat4(obj.transform.normalMatrix());
     push.modelMatrix = obj.transform.mat4();
 
     vkCmdPushConstants(frameInfo.commandBuffer, pipelineLayout,

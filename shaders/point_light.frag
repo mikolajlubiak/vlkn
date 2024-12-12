@@ -13,14 +13,13 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
   mat4 view;
   mat4 inverseView;
   vec4 ambientLightColor;
-  PointLight pointLights[10];
+  PointLight pointLights[16];
   uint lightsNum;
 } ubo;
 
 layout (push_constant) uniform Push {
   vec4 position;
   vec4 color;
-  float radius;
 } push;
 
 const float PI = 3.14;

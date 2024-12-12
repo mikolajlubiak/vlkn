@@ -258,18 +258,36 @@ void App::loadGameObjects() {
 
   gameObjects.emplace(floor.getId(), std::move(floor));
 
-  std::vector<glm::vec3> lightColors{{1.f, .1f, .1f}, {.1f, .1f, 1.f},
-                                     {.1f, 1.f, .1f}, {1.f, 1.f, .1f},
-                                     {.1f, 1.f, 1.f}, {1.f, 1.f, 1.f}};
+  std::array<glm::vec3, 7> rainbowColors = {
+      glm::vec3(1.0f, 0.0f, 0.0f), // Red
+      glm::vec3(1.0f, 0.5f, 0.0f), // Orange
+      glm::vec3(1.0f, 1.0f, 0.0f), // Yellow
+      glm::vec3(0.0f, 1.0f, 0.0f), // Green
+      glm::vec3(0.0f, 0.0f, 1.0f), // Blue
+      glm::vec3(0.5f, 0.0f, 1.0f), // Indigo
+      glm::vec3(0.9f, 0.0f, 0.9f)  // Violet
+  };
 
-  for (std::size_t i = 0; i < lightColors.size(); i++) {
+  for (std::size_t i = 0; i < MAX_LIGHTS; i++) {
     VlknGameObject pointLight = VlknGameObject::makePointLight(0.1f);
-    pointLight.color = lightColors[i];
-    glm::mat4 rotateLight = glm::rotate(
-        glm::mat4(1.0f), i * glm::two_pi<float>() / lightColors.size(),
-        {0.0f, -1.0f, 0.0f});
+
+    // Calculate the index for the rainbow colors
+    float t = static_cast<float>(i) / (MAX_LIGHTS - 1); // Normalize i to [0, 1]
+    std::size_t colorIndex =
+        static_cast<std::size_t>(t * (rainbowColors.size() - 1));
+    std::size_t nextColorIndex = (colorIndex + 1) % rainbowColors.size();
+
+    // Interpolate between the two colors
+    float blendFactor = (t * (rainbowColors.size() - 1)) - colorIndex;
+    pointLight.color = glm::mix(rainbowColors[colorIndex],
+                                rainbowColors[nextColorIndex], blendFactor);
+
+    glm::mat4 rotateLight =
+        glm::rotate(glm::mat4(1.0f), i * glm::two_pi<float>() / MAX_LIGHTS,
+                    {0.0f, -1.0f, 0.0f});
     pointLight.transform.translation =
         glm::vec3(rotateLight * glm::vec4(-1.0f, -2.0f, -1.0f, 1.0f));
+
     gameObjects.emplace(pointLight.getId(), std::move(pointLight));
   }
 }
