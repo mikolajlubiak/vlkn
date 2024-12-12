@@ -85,6 +85,7 @@ void PointLightSystem::update(const FrameInfo &frameInfo,
 
       ubo.pointLights[lightIndex].position =
           glm::vec4(obj.transform.translation, 1.0f);
+
       ubo.pointLights[lightIndex].color =
           glm::vec4(obj.color + glm::vec3(pointLightColor),
                     obj.pointLight->lightIntensity + pointLightColor.w);
