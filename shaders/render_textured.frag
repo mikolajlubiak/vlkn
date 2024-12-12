@@ -21,7 +21,7 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
   uint lightsNum;
 } ubo;
 
-layout(set = 0, binding = 1) uniform sampler2D texSampler;
+layout(set = 0, binding = 1) uniform sampler2D textures[8];
 
 layout(push_constant) uniform Push {
   mat4 modelMatrix;
@@ -56,7 +56,9 @@ void main() {
     specularLight += lightContribution * blinnTerm;
   }
 
-  vec4 texColor = texture(texSampler, fragUV);
+  uint idx = uint(push.normalMatrix[3][3]);
+
+  vec4 texColor = texture(textures[idx], fragUV);
   vec4 shadingColor = vec4((diffuseLight + specularLight) * fragColor, 1.0);
 
   outColor = vec4(shadingColor * texColor);

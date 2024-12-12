@@ -94,6 +94,9 @@ public:
                                     VkDescriptorBufferInfo *bufferInfo);
   VlknDescriptorWriter &writeImage(uint32_t binding,
                                    VkDescriptorImageInfo *imageInfo);
+  VlknDescriptorWriter &writeImageArray(uint32_t binding,
+                                        VkDescriptorImageInfo *imageInfo,
+                                        uint32_t count);
 
   bool build(VkDescriptorSet &set);
   void overwrite(VkDescriptorSet &set);

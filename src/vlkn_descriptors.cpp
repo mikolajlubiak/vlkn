@@ -167,20 +167,25 @@ VlknDescriptorWriter::writeBuffer(uint32_t binding,
 VlknDescriptorWriter &
 VlknDescriptorWriter::writeImage(uint32_t binding,
                                  VkDescriptorImageInfo *imageInfo) {
+  return writeImageArray(binding, imageInfo, 1);
+}
+
+VlknDescriptorWriter &VlknDescriptorWriter::writeImageArray(
+    uint32_t binding, VkDescriptorImageInfo *imageInfo, uint32_t count) {
   assert(setLayout.bindings.count(binding) == 1 &&
          "Layout does not contain specified binding");
 
   auto &bindingDescription = setLayout.bindings[binding];
 
-  assert(bindingDescription.descriptorCount == 1 &&
-         "Binding single descriptor info, but binding expects multiple");
+  assert(bindingDescription.descriptorCount != count + 1 &&
+         "Binding expects different number of descriptors");
 
   VkWriteDescriptorSet write{};
   write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  write.descriptorType = bindingDescription.descriptorType;
   write.dstBinding = binding;
+  write.descriptorType = bindingDescription.descriptorType;
+  write.descriptorCount = count;
   write.pImageInfo = imageInfo;
-  write.descriptorCount = 1;
 
   writes.push_back(write);
   return *this;

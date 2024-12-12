@@ -74,8 +74,9 @@ void RenderSystem::renderGameObjects(FrameInfo &frameInfo) {
     }
 
     PushConstantData push{};
-    push.normalMatrix = glm::mat4(obj.transform.normalMatrix());
     push.modelMatrix = obj.transform.mat4();
+    push.normalMatrix = glm::mat4(obj.transform.normalMatrix());
+    push.normalMatrix[3][3] = obj.imgIdx;
 
     vkCmdPushConstants(frameInfo.commandBuffer, pipelineLayout,
                        VK_SHADER_STAGE_VERTEX_BIT |

@@ -40,12 +40,15 @@
 
 namespace vlkn {
 
+constexpr std::size_t TEXTURE_COUNT = 8;
+
 App::App() {
   globalPool = VlknDescriptorPool::Builder(vlknDevice)
                    .setMaxSets(VlknSwapChain::MAX_FRAMES_IN_FLIGHT)
                    .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                 VlknSwapChain::MAX_FRAMES_IN_FLIGHT)
-                   .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 2)
+                   .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                                TEXTURE_COUNT * 2)
                    .build();
 
   gameObjects.reserve(16);
@@ -69,12 +72,23 @@ void App::run() {
   std::unique_ptr<VlknImage> textureImage =
       VlknImage::createImageFromFile(vlknDevice, "textures/image.jpg");
 
+  std::unique_ptr<VlknImage> emptyImage =
+      VlknImage::createEmptyImage(vlknDevice);
+
+  std::array<VkDescriptorImageInfo, TEXTURE_COUNT> descriptorImageInfos;
+
+  descriptorImageInfos[0] = emptyImage->descriptorInfo();
+
+  for (std::size_t i = 1; i < 8; ++i) {
+    descriptorImageInfos[i] = textureImage->descriptorInfo();
+  }
+
   auto globalSetLayout =
       VlknDescriptorSetLayout::Builder(vlknDevice)
           .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                       VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
           .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                      VK_SHADER_STAGE_FRAGMENT_BIT)
+                      VK_SHADER_STAGE_FRAGMENT_BIT, TEXTURE_COUNT)
           .build();
 
   std::vector<VkDescriptorSet> globalDescriptorSets(
@@ -82,12 +96,18 @@ void App::run() {
 
   for (std::size_t i = 0; i < globalDescriptorSets.size(); i++) {
     auto bufferInfo = uboBuffers[i]->descriptorInfo();
-    auto imageInfo = textureImage->descriptorInfo();
 
-    VlknDescriptorWriter(*globalSetLayout, *globalPool)
-        .writeBuffer(0, &bufferInfo)
-        .writeImage(1, &imageInfo)
-        .build(globalDescriptorSets[i]);
+    VlknDescriptorWriter descriptorWriter =
+        VlknDescriptorWriter(*globalSetLayout, *globalPool);
+
+    descriptorWriter.writeBuffer(0, &bufferInfo);
+
+    descriptorWriter.writeImageArray(1, descriptorImageInfos.data(),
+                                     descriptorImageInfos.size());
+
+    if (!descriptorWriter.build(globalDescriptorSets[i])) {
+      throw std::runtime_error("failed to build the descriptor sets");
+    }
   }
 
   RenderSystem renderSystem{vlknDevice, vlknRenderer.getSwapChainRenderPass(),
@@ -206,6 +226,7 @@ void App::loadGameObjects() {
   floor.model = floorModel;
   floor.transform.translation = {0.0f, 0.0f, 0.0f};
   floor.transform.scale = glm::vec3(16.0f, 1.0f, 16.0f);
+  floor.imgIdx = 1;
 
   gameObjects.emplace(floor.getId(), std::move(floor));
 

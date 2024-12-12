@@ -23,6 +23,13 @@ public:
 
   struct Builder {
     Image image;
+    bool isStbImage = false;
+
+    ~Builder() {
+      if (isStbImage) {
+        stbi_image_free(image.pixels);
+      }
+    }
 
     void loadImage(const std::filesystem::path &path);
   };
@@ -36,6 +43,8 @@ public:
 
   static std::unique_ptr<VlknImage>
   createImageFromFile(VlknDevice &device, const std::filesystem::path &path);
+
+  static std::unique_ptr<VlknImage> createEmptyImage(VlknDevice &device);
 
   VkDescriptorImageInfo descriptorInfo();
 

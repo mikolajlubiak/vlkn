@@ -54,6 +54,7 @@ public:
   // Optional components
   std::shared_ptr<VlknModel> model = nullptr;
   std::unique_ptr<PointLightComponent> pointLight = nullptr;
+  std::int32_t imgIdx = 0;
 
 private:
   VlknGameObject(id_t objId) : id(objId) {};

@@ -14,6 +14,7 @@ namespace vlkn {
 void VlknImage::Builder::loadImage(const std::filesystem::path &path) {
   image.pixels = stbi_load(path.c_str(), &image.texWidth, &image.texHeight,
                            &image.texChannels, STBI_rgb_alpha);
+  isStbImage = true;
 }
 
 VlknImage::VlknImage(VlknDevice &device, const Builder &builder)
@@ -39,6 +40,18 @@ VlknImage::createImageFromFile(VlknDevice &device,
   return std::make_unique<VlknImage>(device, builder);
 }
 
+std::unique_ptr<VlknImage> VlknImage::createEmptyImage(VlknDevice &device) {
+  unsigned char pixels[] = {255, 255, 255, 255};
+
+  Builder builder{};
+  builder.image.texHeight = 1;
+  builder.image.texWidth = 1;
+  builder.image.texChannels = 0;
+  builder.image.pixels = pixels;
+
+  return std::make_unique<VlknImage>(device, builder);
+}
+
 VkDescriptorImageInfo VlknImage::descriptorInfo() {
   return VkDescriptorImageInfo{
       .sampler = textureSampler,
@@ -58,7 +71,7 @@ void VlknImage::createTextureImage(Image image) {
   stagingBuffer.map();
   stagingBuffer.writeToBuffer(reinterpret_cast<const void *>(image.pixels),
                               imageSize);
-  stbi_image_free(image.pixels);
+  // stbi_image_free(image.pixels);
 
   createImage(image.texWidth, image.texHeight, VK_FORMAT_R8G8B8A8_SRGB,
               VK_IMAGE_TILING_OPTIMAL,
