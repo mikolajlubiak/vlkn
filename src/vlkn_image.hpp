@@ -42,16 +42,16 @@ public:
 private:
   void createTextureImage(Image image);
 
+  void createTextureImageView();
+
+  void createTextureSampler();
+
   void createImage(std::uint32_t width, std::uint32_t height, VkFormat format,
                    VkImageTiling tiling, VkImageUsageFlags usage,
                    VkMemoryPropertyFlags properties);
 
   void transitionImageLayout(VkFormat format, VkImageLayout oldLayout,
                              VkImageLayout newLayout);
-
-  void createTextureImageView();
-
-  void createTextureSampler();
 
   VlknDevice &vlknDevice;
   VkImage textureImage;
