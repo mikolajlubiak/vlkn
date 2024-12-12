@@ -43,7 +43,7 @@ private:
   VlknDevice &vlknDevice;
   std::unique_ptr<VlknDescriptorPool> descriptorPool;
   ImVec4 pointLightColor{};
-  ImGuiIO *io;
+  ImGuiIO *imguiIO;
 };
 
 } // namespace vlkn

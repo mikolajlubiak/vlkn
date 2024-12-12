@@ -26,16 +26,9 @@ list(APPEND CMAKE_PREFIX_PATH ${ImGui_DIR})
 # Gather source and header files
 file(GLOB_RECURSE vlkn_SOURCES CONFIGURE_DEPENDS "src/*.cpp")
 file(GLOB_RECURSE vlkn_HEADERS CONFIGURE_DEPENDS "src/*.hpp")
-file(GLOB_RECURSE vlkn_MODELS CONFIGURE_DEPENDS "models/*.obj")
+file(GLOB_RECURSE vlkn_MODELS CONFIGURE_DEPENDS "models/*")
+file(GLOB_RECURSE vlkn_TEXTURES CONFIGURE_DEPENDS "textures/*")
 file(GLOB_RECURSE vlkn_SHADERS "shaders/*.frag" "shaders/*.vert")
-
-# Set include directories
-set(vlkn_INCLUDE_DIRS "")
-foreach(_headerFile ${vlkn_HEADERS})
-    get_filename_component(_dir ${_headerFile} PATH)
-    list(APPEND vlkn_INCLUDE_DIRS ${_dir})
-endforeach()
-list(REMOVE_DUPLICATES vlkn_INCLUDE_DIRS)
 
 # Set release build flags
 set(CMAKE_CXX_FLAGS_RELEASE_INIT "${CMAKE_CXX_FLAGS_RELEASE_INIT} - -Ofast -march=native -mtune=native -DNDEBUG")
@@ -50,6 +43,12 @@ find_package(ImGui CONFIG REQUIRED)
 foreach (_model ${vlkn_MODELS})
 	file(RELATIVE_PATH _relative_path ${CMAKE_SOURCE_DIR} ${_model})
 	configure_file(${_model} ${CMAKE_BINARY_DIR}/${_relative_path} COPYONLY)
+endforeach()
+
+# Copy textures to build directory
+foreach (_texture ${vlkn_TEXTURES})
+	file(RELATIVE_PATH _relative_path ${CMAKE_SOURCE_DIR} ${_texture})
+	configure_file(${_texture} ${CMAKE_BINARY_DIR}/${_relative_path} COPYONLY)
 endforeach()
 
 # Compile shaders
@@ -80,7 +79,7 @@ add_custom_target(compile_shaders DEPENDS ${vlkn_SPIRV})
 add_dependencies(${PROJECT_NAME} compile_shaders)
 
 # Include directories
-target_include_directories(${PROJECT_NAME} PRIVATE ${vlkn_INCLUDE_DIRS} vulkan glfw glm::glm)
+target_include_directories(${PROJECT_NAME} PRIVATE src include vulkan glfw glm::glm)
 
 # Link libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE vulkan glfw glm::glm ImGui::imgui)

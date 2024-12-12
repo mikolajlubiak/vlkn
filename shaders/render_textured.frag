@@ -56,5 +56,8 @@ void main() {
     specularLight += lightContribution * blinnTerm;
   }
 
-  outColor = vec4((diffuseLight + specularLight) * fragColor, 1.0);
+  vec4 texColor = texture(texSampler, fragUV);
+  vec4 shadingColor = vec4((diffuseLight + specularLight) * fragColor, 1.0);
+
+  outColor = vec4(shadingColor * texColor);
 }

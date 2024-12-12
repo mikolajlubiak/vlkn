@@ -11,6 +11,7 @@
 #include "vlkn_camera.hpp"
 #include "vlkn_device.hpp"
 #include "vlkn_game_object.hpp"
+#include "vlkn_image.hpp"
 #include "vlkn_model.hpp"
 #include "vlkn_renderer.hpp"
 
@@ -44,6 +45,8 @@ App::App() {
                    .setMaxSets(VlknSwapChain::MAX_FRAMES_IN_FLIGHT)
                    .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                 VlknSwapChain::MAX_FRAMES_IN_FLIGHT)
+                   .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                                VlknSwapChain::MAX_FRAMES_IN_FLIGHT)
                    .build();
 
   gameObjects.reserve(16);
@@ -64,10 +67,20 @@ void App::run() {
     uboBuffers[i]->map();
   }
 
+  std::vector<std::unique_ptr<VlknImage>> textureImages(
+      VlknSwapChain::MAX_FRAMES_IN_FLIGHT);
+
+  for (std::size_t i = 0; i < textureImages.size(); i++) {
+    textureImages[i] =
+        VlknImage::createImageFromFile(vlknDevice, "textures/image.jpg");
+  }
+
   auto globalSetLayout =
       VlknDescriptorSetLayout::Builder(vlknDevice)
           .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                       VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
+          .addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                      VK_SHADER_STAGE_FRAGMENT_BIT)
           .build();
 
   std::vector<VkDescriptorSet> globalDescriptorSets(
@@ -75,8 +88,11 @@ void App::run() {
 
   for (std::size_t i = 0; i < globalDescriptorSets.size(); i++) {
     auto bufferInfo = uboBuffers[i]->descriptorInfo();
+    auto imageInfo = textureImages[i]->descriptorInfo();
+
     VlknDescriptorWriter(*globalSetLayout, *globalPool)
         .writeBuffer(0, &bufferInfo)
+        .writeImage(1, &imageInfo)
         .build(globalDescriptorSets[i]);
   }
 

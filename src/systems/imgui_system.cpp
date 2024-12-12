@@ -19,8 +19,8 @@ ImGuiSystem::ImGuiSystem(VlknDevice &device, VkRenderPass renderPass,
 
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
-  io = &ImGui::GetIO();
-  io->ConfigFlags |=
+  imguiIO = &ImGui::GetIO();
+  imguiIO->ConfigFlags |=
       ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
   ImGui::StyleColorsDark();
   ImGui_ImplGlfw_InitForVulkan(vlknDevice.getWindow().getGLFWwindow(), true);
@@ -50,7 +50,6 @@ ImGuiSystem::~ImGuiSystem() {
   ImGui_ImplVulkan_Shutdown();
   ImGui_ImplGlfw_Shutdown();
   ImGui::DestroyContext();
-  free(io);
 }
 
 void ImGuiSystem::render(FrameInfo &frameInfo) {
@@ -60,7 +59,7 @@ void ImGuiSystem::render(FrameInfo &frameInfo) {
 
   ImGui::Begin("Frame time");
   ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
-              1000.0f / io->Framerate, io->Framerate);
+              1000.0f / imguiIO->Framerate, imguiIO->Framerate);
   ImGui::ColorPicker4("Point light color", (float *)&pointLightColor);
   ImGui::End();
 

@@ -54,9 +54,9 @@ void RenderSystem::createPipeline(VkRenderPass renderPass) {
   VlknPipeline::defaultPipelineConfigInfo(pipelineConfig);
   pipelineConfig.renderPass = renderPass;
   pipelineConfig.pipelineLayout = pipelineLayout;
-  vlknPipeline =
-      std::make_unique<VlknPipeline>(vlknDevice, "shaders/render.vert.spv",
-                                     "shaders/render.frag.spv", pipelineConfig);
+  vlknPipeline = std::make_unique<VlknPipeline>(
+      vlknDevice, "shaders/render_textured.vert.spv",
+      "shaders/render_textured.frag.spv", pipelineConfig);
 }
 
 void RenderSystem::renderGameObjects(FrameInfo &frameInfo) {
