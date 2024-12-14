@@ -92,19 +92,10 @@ void KeyboardMovementController::lookAt(
   for (auto i = GLFW_KEY_1; i < GLFW_KEY_9; i++) {
     const VlknGameObject::id_t id = i - GLFW_KEY_1;
     if (keys[i] && gameObjects.find(id) != gameObjects.end()) {
-      direction = glm::normalize(gameObjects.at(id).transform.translation -
-                                 viewerObject.transform.translation);
+      camera.setViewTarget(viewerObject.transform.translation,
+                           gameObjects.at(id).transform.translation);
+      return;
     }
-  }
-
-  if (nonZeroVector(direction)) {
-    float yaw = std::atan2(direction.x, direction.z);
-    float pitch = -std::asin(direction.y);
-
-    pitch = glm::clamp(pitch, glm::radians(-89.0f), glm::radians(89.0f));
-    yaw = glm::mod(yaw, glm::two_pi<decltype(yaw)>());
-
-    viewerObject.transform.rotation = glm::vec3(pitch, yaw, 0.0f);
   }
 }
 

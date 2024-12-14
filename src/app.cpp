@@ -125,7 +125,7 @@ void App::run() {
   VlknGameObject viewerObject = VlknGameObject::createGameObject();
   viewerObject.transform.translation = {0.0f, -1.0f, -2.0f};
 
-  KeyboardMovementController keyboardController{viewerObject};
+  KeyboardMovementController keyboardController{camera, viewerObject};
   MouseMovementController mouseController{viewerObject};
 
   float lastTime = static_cast<float>(glfwGetTime());
@@ -156,8 +156,8 @@ void App::run() {
 
     keyboardController.lookAt(gameObjects);
 
-    camera.setViewYXZ(viewerObject.transform.translation,
-                      viewerObject.transform.rotation);
+    // camera.setViewYXZ(viewerObject.transform.translation,
+    //                   viewerObject.transform.rotation);
 
     camera.setPerspectiveProjection(mouseController.getFov(), aspectRatio, 0.1f,
                                     100.0f);

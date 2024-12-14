@@ -1,6 +1,7 @@
 #pragma once
 
 // local
+#include "vlkn_camera.hpp"
 #include "vlkn_game_object.hpp"
 #include "vlkn_window.hpp"
 
@@ -25,8 +26,8 @@ public:
     closeApp = GLFW_KEY_ESCAPE,
   };
 
-  KeyboardMovementController(VlknGameObject &viewerObject)
-      : viewerObject(viewerObject) {}
+  KeyboardMovementController(VlknCamera &camera, VlknGameObject &viewerObject)
+      : camera(camera), viewerObject(viewerObject) {}
 
   bool shouldClose() { return keys[closeApp]; }
 
@@ -43,6 +44,7 @@ public:
   bool isKeyPressed(uint32_t key) { return keys[key]; }
 
 private:
+  VlknCamera &camera;
   VlknGameObject &viewerObject;
   static std::unordered_map<uint32_t, bool> keys;
   static constexpr float speed{3.0f};
