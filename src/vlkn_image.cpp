@@ -78,15 +78,14 @@ void VlknImage::createTextureImage(Image image) {
               VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
               VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-  transitionImageLayout(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED,
+  transitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED,
                         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
   vlknDevice.copyBufferToImage(stagingBuffer.getBuffer(), textureImage,
                                static_cast<std::uint32_t>(image.texWidth),
                                static_cast<std::uint32_t>(image.texHeight), 1);
 
-  transitionImageLayout(VK_FORMAT_R8G8B8A8_SRGB,
-                        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+  transitionImageLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 
@@ -113,7 +112,7 @@ void VlknImage::createImage(std::uint32_t width, std::uint32_t height,
                                  textureImageMemory);
 }
 
-void VlknImage::transitionImageLayout(VkFormat format, VkImageLayout oldLayout,
+void VlknImage::transitionImageLayout(VkImageLayout oldLayout,
                                       VkImageLayout newLayout) {
   VkCommandBuffer commandBuffer = vlknDevice.beginSingleTimeCommands();
 

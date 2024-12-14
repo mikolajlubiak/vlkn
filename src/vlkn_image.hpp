@@ -59,8 +59,7 @@ private:
                    VkImageTiling tiling, VkImageUsageFlags usage,
                    VkMemoryPropertyFlags properties);
 
-  void transitionImageLayout(VkFormat format, VkImageLayout oldLayout,
-                             VkImageLayout newLayout);
+  void transitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout);
 
   VlknDevice &vlknDevice;
   VkImage textureImage;
