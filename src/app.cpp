@@ -179,9 +179,13 @@ void App::run() {
       ubo.projection = camera.getProjection();
       ubo.view = camera.getView();
       ubo.inverseView = camera.getInverseView();
+
       pointLightSystem.update(frameInfo, imguiSystem.getPointLightColor(), ubo);
+
       uboBuffers[frameIndex]->writeToBuffer(&ubo);
       uboBuffers[frameIndex]->flush();
+
+      imguiSystem.update(viewerObject.transform.rotation);
 
       // render stage
       vlknRenderer.beginSwapChainRenderPass(commandBuffer);

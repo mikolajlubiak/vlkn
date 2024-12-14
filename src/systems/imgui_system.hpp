@@ -33,8 +33,11 @@ public:
   ImGuiSystem(const ImGuiSystem &) = delete;
   ImGuiSystem &operator=(const ImGuiSystem &) = delete;
 
-  void render(FrameInfo &frameInfo);
-  glm::vec4 getPointLightColor() {
+  void update(const glm::vec3 &rotationInfo);
+
+  void render(const FrameInfo &frameInfo) const;
+
+  glm::vec4 getPointLightColor() const {
     return glm::vec4(pointLightColor.x, pointLightColor.y, pointLightColor.z,
                      pointLightColor.w);
   }

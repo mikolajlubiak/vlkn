@@ -52,7 +52,7 @@ ImGuiSystem::~ImGuiSystem() {
   ImGui::DestroyContext();
 }
 
-void ImGuiSystem::render(FrameInfo &frameInfo) {
+void ImGuiSystem::update(const glm::vec3 &rotationInfo) {
   ImGui_ImplVulkan_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
@@ -60,9 +60,13 @@ void ImGuiSystem::render(FrameInfo &frameInfo) {
   ImGui::Begin("Frame time");
   ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
               1000.0f / imguiIO->Framerate, imguiIO->Framerate);
+  ImGui::Text("Rotation vector: X %.3f, Y %.3f, Z %.3f", rotationInfo.x,
+              rotationInfo.y, rotationInfo.z);
   ImGui::ColorPicker4("Point light color", (float *)&pointLightColor);
   ImGui::End();
+}
 
+void ImGuiSystem::render(const FrameInfo &frameInfo) const {
   ImGui::Render();
   ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(),
                                   frameInfo.commandBuffer);
