@@ -52,7 +52,7 @@ ImGuiSystem::~ImGuiSystem() {
   ImGui::DestroyContext();
 }
 
-void ImGuiSystem::update(const glm::vec3 &rotationInfo) {
+void ImGuiSystem::update(const glm::quat &rotation) {
   ImGui_ImplVulkan_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
@@ -60,8 +60,13 @@ void ImGuiSystem::update(const glm::vec3 &rotationInfo) {
   ImGui::Begin("Frame time");
   ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
               1000.0f / imguiIO->Framerate, imguiIO->Framerate);
-  ImGui::Text("Rotation vector: X %.3f, Y %.3f, Z %.3f", rotationInfo.x,
-              rotationInfo.y, rotationInfo.z);
+
+  // Convert quaternion to Euler angles for display
+  glm::vec3 eulerAngles = glm::eulerAngles(rotation);
+  ImGui::Text("Rotation (Euler angles): X %.3f, Y %.3f, Z %.3f",
+              glm::degrees(eulerAngles.x), glm::degrees(eulerAngles.y),
+              glm::degrees(eulerAngles.z));
+
   ImGui::ColorPicker4("Point light color", (float *)&pointLightColor);
   ImGui::End();
 }

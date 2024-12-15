@@ -16,17 +16,33 @@ namespace vlkn {
 
 void MouseMovementController::lookAround() {
   if (mouseOffsetX != 0.0f || mouseOffsetY != 0.0f) {
-    viewerObject.transform.rotation.x += mouseSensitivity * mouseOffsetY;
-    viewerObject.transform.rotation.y += mouseSensitivity * mouseOffsetX;
+    // Get the forward vector based on the current rotation
+    const glm::vec3 forwardDir = glm::rotate(viewerObject.transform.rotation,
+                                             glm::vec3(0.0f, 0.0f, -1.0f));
 
-    viewerObject.transform.rotation.x =
-        glm::clamp(viewerObject.transform.rotation.x, glm::radians(-89.0f),
-                   glm::radians(89.0f));
+    // Up vector always faces up (world up)
+    constexpr glm::vec3 worldUp = glm::vec3(0.0f, -1.0f, 0.0f);
 
-    viewerObject.transform.rotation.y =
-        glm::mod(viewerObject.transform.rotation.y,
-                 glm::two_pi<decltype(viewerObject.transform.rotation.y)>());
+    // Calculate the right vector based on the forward direction
+    const glm::vec3 rightDir = glm::normalize(glm::cross(forwardDir, worldUp));
 
+    // Create quaternions for the rotations based on mouse movement
+    const glm::quat pitchRotation =
+        glm::angleAxis(mouseSensitivity * mouseOffsetY,
+                       rightDir); // Rotate around local X-axis
+
+    const glm::quat yawRotation = glm::angleAxis(
+        mouseSensitivity * mouseOffsetX, worldUp); // Rotate around Y-axis
+
+    // Combine the rotations (yaw first, then pitch)
+    viewerObject.transform.rotation =
+        yawRotation * pitchRotation * viewerObject.transform.rotation;
+
+    // Normalize the quaternion to avoid drift
+    viewerObject.transform.rotation =
+        glm::normalize(viewerObject.transform.rotation);
+
+    // Reset mouse offsets
     mouseOffsetX = 0.0f;
     mouseOffsetY = 0.0f;
   }

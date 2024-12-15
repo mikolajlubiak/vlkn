@@ -4,8 +4,11 @@
 #include "vlkn_model.hpp"
 
 // lib
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 // std
 #include <cstdint>
@@ -17,7 +20,7 @@ namespace vlkn {
 struct TransformComponent {
   glm::vec3 translation{};
   glm::vec3 scale{1.0f, 1.0f, 1.0f};
-  glm::vec3 rotation{};
+  glm::quat rotation{};
 
   glm::mat4 mat4();
   glm::mat3 normalMatrix();

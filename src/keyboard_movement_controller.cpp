@@ -46,18 +46,18 @@ void KeyboardMovementController::keyboardCallback(GLFWwindow *const window,
 }
 
 void KeyboardMovementController::move(const float step) {
-  const float yaw = viewerObject.transform.rotation.y;
-  const float pitch = viewerObject.transform.rotation.x;
+  // Get the forward vector based on the current rotation
+  const glm::vec3 forwardDir = glm::rotate(viewerObject.transform.rotation,
+                                           glm::vec3(0.0f, 0.0f, -1.0f));
 
-  const glm::vec3 forwardDir = glm::normalize(
-      glm::vec3(std::sin(yaw) * std::cos(pitch), -std::sin(pitch),
-                std::cos(yaw) * std::cos(pitch)));
+  // Get the up vector based on the current rotation
+  const glm::vec3 upDir = glm::rotate(viewerObject.transform.rotation,
+                                      glm::vec3(0.0f, -1.0f, 0.0f));
 
-  const glm::vec3 rightDir =
-      glm::normalize(glm::cross(glm::vec3{0.0f, 1.0f, 0.0f}, forwardDir));
+  // Right vector is the cross product of up and forward
+  const glm::vec3 rightDir = glm::normalize(glm::cross(upDir, forwardDir));
 
-  const glm::vec3 upDir = glm::normalize(glm::cross(rightDir, forwardDir));
-
+  // Construct the move vector based on keyboard input
   glm::vec3 moveDir{0.0f};
   if (keys[moveForward]) {
     moveDir += forwardDir;
@@ -80,7 +80,9 @@ void KeyboardMovementController::move(const float step) {
 
   if (nonZeroVector(moveDir)) {
     viewerObject.transform.translation +=
-        speed * step * glm::normalize(moveDir);
+        speed * step *
+        glm::normalize(moveDir); // Normalize the move vector to avoid sqrt(2)
+                                 // times faster movement when going diagonally
   }
 }
 
@@ -98,13 +100,14 @@ void KeyboardMovementController::lookAt(
   }
 
   if (nonZeroVector(direction)) {
-    float yaw = std::atan2(direction.x, direction.z);
-    float pitch = -std::asin(direction.y);
+    constexpr glm::vec3 upDir = glm::vec3(0.0f, 1.0f, 0.0f);
 
-    pitch = glm::clamp(pitch, glm::radians(-89.0f), glm::radians(89.0f));
-    yaw = glm::mod(yaw, glm::two_pi<decltype(yaw)>());
+    // Create a quaternion that represents the rotation from the viewer's
+    // forward direction to the target direction
+    glm::quat rotation = glm::quatLookAtRH(direction, upDir);
 
-    viewerObject.transform.rotation = glm::vec3(pitch, yaw, 0.0f);
+    // Set the viewer's rotation to the calculated quaternion
+    viewerObject.transform.rotation = glm::normalize(rotation);
   }
 }
 

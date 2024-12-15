@@ -33,7 +33,7 @@ public:
   ImGuiSystem(const ImGuiSystem &) = delete;
   ImGuiSystem &operator=(const ImGuiSystem &) = delete;
 
-  void update(const glm::vec3 &rotationInfo);
+  void update(const glm::quat &rotation);
 
   void render(const FrameInfo &frameInfo) const;
 
