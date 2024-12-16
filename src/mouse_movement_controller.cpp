@@ -20,19 +20,20 @@ void MouseMovementController::lookAround() {
     const glm::vec3 forwardDir = glm::rotate(viewerObject.transform.rotation,
                                              glm::vec3(0.0f, 0.0f, -1.0f));
 
-    // Up vector always faces up (world up)
-    constexpr glm::vec3 worldUp = glm::vec3(0.0f, -1.0f, 0.0f);
+    // Get the up vector based on the current rotation
+    const glm::vec3 upDir = glm::rotate(viewerObject.transform.rotation,
+                                        glm::vec3(0.0f, -1.0f, 0.0f));
 
     // Calculate the right vector based on the forward direction
-    const glm::vec3 rightDir = glm::normalize(glm::cross(forwardDir, worldUp));
+    const glm::vec3 rightDir = glm::normalize(glm::cross(forwardDir, upDir));
 
     // Create quaternions for the rotations based on mouse movement
+    const glm::quat yawRotation = glm::angleAxis(
+        mouseSensitivity * mouseOffsetX, upDir); // Rotate around Y-axis
+
     const glm::quat pitchRotation =
         glm::angleAxis(mouseSensitivity * mouseOffsetY,
                        rightDir); // Rotate around local X-axis
-
-    const glm::quat yawRotation = glm::angleAxis(
-        mouseSensitivity * mouseOffsetX, worldUp); // Rotate around Y-axis
 
     // Combine the rotations (yaw first, then pitch)
     viewerObject.transform.rotation =
