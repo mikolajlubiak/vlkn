@@ -57,8 +57,12 @@ void KeyboardMovementController::move(const float step) {
   // Right vector is the cross product of up and forward
   const glm::vec3 rightDir = glm::normalize(glm::cross(upDir, forwardDir));
 
-  // Construct the move vector based on keyboard input
+  // Roll rotation sensitivity
+  constexpr float rollSensitivity = 0.01f;
+
+  // Construct the move vector and roll rotation based on keyboard input
   glm::vec3 moveDir{0.0f};
+  float roll = 0.0f;
   if (keys[moveForward]) {
     moveDir += forwardDir;
   }
@@ -77,6 +81,25 @@ void KeyboardMovementController::move(const float step) {
   if (keys[moveDown]) {
     moveDir -= upDir;
   }
+  if (keys[rollLeft]) {
+    roll += rollSensitivity;
+  }
+  if (keys[rollRight]) {
+    roll -= rollSensitivity;
+  }
+
+  const glm::quat rollRotation =
+      glm::angleAxis(roll,
+                     forwardDir); // Rotate around local Z-axis
+
+  // Combine the viwer object rotation quaternion with the roll rotation
+  // quaternion
+  viewerObject.transform.rotation =
+      rollRotation * viewerObject.transform.rotation;
+
+  // Normalize the quaternion to avoid drift
+  viewerObject.transform.rotation =
+      glm::normalize(viewerObject.transform.rotation);
 
   if (nonZeroVector(moveDir)) {
     viewerObject.transform.translation +=
@@ -96,6 +119,7 @@ void KeyboardMovementController::lookAt(
     if (keys[i] && gameObjects.find(id) != gameObjects.end()) {
       direction = glm::normalize(gameObjects.at(id).transform.translation -
                                  viewerObject.transform.translation);
+      break;
     }
   }
 
@@ -104,7 +128,7 @@ void KeyboardMovementController::lookAt(
 
     // Create a quaternion that represents the rotation from the viewer's
     // forward direction to the target direction
-    glm::quat rotation = glm::quatLookAtRH(direction, upDir);
+    glm::quat rotation = glm::quatLookAt(direction, upDir);
 
     // Set the viewer's rotation to the calculated quaternion
     viewerObject.transform.rotation = glm::normalize(rotation);

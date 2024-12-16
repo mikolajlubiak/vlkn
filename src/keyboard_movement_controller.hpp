@@ -22,6 +22,8 @@ public:
     lookRight = GLFW_KEY_RIGHT,
     lookUp = GLFW_KEY_UP,
     lookDown = GLFW_KEY_DOWN,
+    rollLeft = GLFW_KEY_Z,
+    rollRight = GLFW_KEY_X,
     closeApp = GLFW_KEY_ESCAPE,
   };
 
