@@ -27,13 +27,13 @@ layout (push_constant) uniform Push {
 const float PI = 3.14;
 
 void main() {
-  float distance = sqrt(dot(fragOffset, fragOffset));
+  float distance = dot(fragOffset, fragOffset);
 
   if (distance > 1.0) {
     discard;
   }
 
-  float distanceCosine = 0.5 * (cos(distance * PI) + 0.5);
+  float distanceCosine = 0.5 * (cos(sqrt(distance) * PI) + 1);
 
-  outColor = vec4(push.color.xyz * push.color.w + pow(distanceCosine, 2.0), distanceCosine);
+  outColor = vec4(push.color.xyz * push.color.w + pow(distanceCosine, 8.0), distanceCosine);
 }
