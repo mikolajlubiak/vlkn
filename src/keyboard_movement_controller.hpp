@@ -30,8 +30,6 @@ public:
   KeyboardMovementController(VlknGameObject &viewerObject)
       : viewerObject(viewerObject) {}
 
-  bool shouldClose() { return keys[closeApp]; }
-
   void move(const float step);
 
   // lock camera on game objects
@@ -42,7 +40,9 @@ public:
                                const int scancode, const int action,
                                const int mods);
 
-  bool isKeyPressed(uint32_t key) { return keys[key]; }
+  static bool isKeyPressed(const uint32_t key) { return keys[key]; }
+
+  static bool shouldClose() { return keys[closeApp]; }
 
 private:
   VlknGameObject &viewerObject;
