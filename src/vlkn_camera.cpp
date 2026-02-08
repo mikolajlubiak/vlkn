@@ -4,6 +4,11 @@
 // local
 #include "vlkn_utils.hpp"
 
+// libs
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/ext.hpp>
+#include <glm/gtx/quaternion.hpp>
+
 // std
 #include <cassert>
 #include <limits>
