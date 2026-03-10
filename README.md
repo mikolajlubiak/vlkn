@@ -2,7 +2,7 @@
 
 A Vulkan-based 3D renderer and game engine written in C++20. This project demonstrates a complete Vulkan rendering pipeline including physical/logical device management, swap chain handling, a multi-pipeline render system, OBJ model loading, a 6-DOF camera, dynamic point lights with Phong shading, texture sampling, and an ImGui debug overlay. It is structured as a set of thin, focused abstractions over the Vulkan API, keeping each concern in its own class while remaining easy to follow.
 
-→ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for a detailed breakdown of the engine architecture and component relationships.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for a detailed breakdown of the engine architecture and component relationships.
 
 ## Features
 
@@ -18,6 +18,10 @@ A Vulkan-based 3D renderer and game engine written in C++20. This project demons
 - **Descriptor set management** — global UBO (projection/view matrices + light array) and a combined image sampler array bound once per frame through a single descriptor set
 - **ImGui debug overlay** — real-time camera rotation display and point-light colour picker rendered within the shared render pass
 - **Fixed-timestep game loop** — accumulator-based update loop decoupled from render frame rate
+
+## Tech Stack
+
+`C++` `Vulkan` `GLSL` `GLFW` `GLM` `ImGui` `CMake` `Ninja`
 
 ## Build
 
