@@ -4,6 +4,10 @@ A Vulkan-based 3D renderer and game engine written in C++20. This project demons
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for a detailed breakdown of the engine architecture and component relationships.
 
+## Project showcase
+
+Playlist with demos: https://video.infosec.exchange/w/p/oRWze5L2wpb8tULWdEon8G
+
 ## Features
 
 - **Vulkan rendering pipeline** — full graphics pipeline setup with configurable `PipelineConfigInfo`, SPIR-V shader loading, and dynamic viewport/scissor state
