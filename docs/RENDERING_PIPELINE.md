@@ -30,7 +30,7 @@ Render Pass (single subpass)
 │
 ├─── 2. PointLightSystem pipeline     (point_light.vert/frag)
 │        Billboard quads for light visualisation
-│        Depth test ON, depth write OFF
+│        Depth test ON, depth write ON
 │        Alpha blending (src_alpha / one_minus_src_alpha)
 │        No vertex input (billboard generated in shader)
 │
@@ -154,7 +154,7 @@ dstAlphaBlendFactor:  VK_BLEND_FACTOR_ZERO
 alphaBlendOp:         VK_BLEND_OP_ADD
 ```
 
-Depth writing is also disabled for the billboard pipeline so that light spheres do not occlude each other in the depth buffer.
+Depth testing and writing stay enabled for the billboard pipeline; the back-to-front draw order is what makes overlapping billboards blend correctly.
 
 ### Vertex input
 
@@ -196,7 +196,7 @@ Set 0, Binding 1: VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER (array of 8)
 
 The global UBO is written once per frame (after the `PointLightSystem::update()` call updates light positions) and uploaded via a persistently-mapped host-visible `VlknBuffer`. The descriptor set is bound once per pipeline with `vkCmdBindDescriptorSets` before all draw calls for that pipeline.
 
-Each texture in the sampler array was loaded from disk and uploaded to a device-local `VkImage` with `VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL`. The sampler uses trilinear filtering (`VK_FILTER_LINEAR` + `VK_SAMPLER_MIPMAP_MODE_LINEAR`) and anisotropic filtering up to the device maximum.
+Each texture in the sampler array was loaded from disk and uploaded to a device-local `VkImage` with `VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL`. Textures have a single mip level; the sampler uses bilinear filtering (`VK_FILTER_LINEAR`, `maxLod = 0`), `REPEAT` addressing and anisotropic filtering up to the device maximum.
 
 ---
 
@@ -245,14 +245,14 @@ One `vkCmdPushConstants` + `vkCmdDraw(6, 1, 0, 0)` is issued per light, in back-
 
 - **Surface format**: prefers `VK_FORMAT_B8G8R8A8_SRGB` / `VK_COLOR_SPACE_SRGB_NONLINEAR_KHR`; falls back to the first available format.
 - **Present mode**: prefers `VK_PRESENT_MODE_MAILBOX_KHR` (triple buffering, no tearing, low latency); falls back to `VK_PRESENT_MODE_FIFO_KHR` (vsync, always available).
-- **Swap extent**: uses the window's framebuffer pixel size, clamped to the surface's `minImageExtent` / `maxImageExtent`.
+- **Swap extent**: uses the surface's `currentExtent` when the platform defines one; otherwise the window extent, clamped to the surface's `minImageExtent` / `maxImageExtent`.
 - **Image count**: `minImageCount + 1`, clamped to `maxImageCount`.
 
 The swap chain is created with `VK_SHARING_MODE_EXCLUSIVE` when the graphics and present queues are the same family (typical on most hardware), or `VK_SHARING_MODE_CONCURRENT` otherwise.
 
 ### Depth buffer
 
-A depth image is created for each swap chain image using the best available depth format selected by `findDepthFormat()` (prefers `VK_FORMAT_D32_SFLOAT`, then `VK_FORMAT_D32_SFLOAT_S8_UINT`, then `VK_FORMAT_D24_UNORM_S8_UINT`). Each depth image uses device-local memory and is transitioned to `VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL`.
+A depth image is created for each swap chain image using the best available depth format selected by `findDepthFormat()` (prefers `VK_FORMAT_D32_SFLOAT`, then `VK_FORMAT_D32_SFLOAT_S8_UINT`, then `VK_FORMAT_D24_UNORM_S8_UINT`). Each depth image uses device-local memory; the render pass moves it from `UNDEFINED` to `VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL`.
 
 ### Render pass
 
@@ -263,7 +263,7 @@ The render pass has two attachments:
 | Colour | swap chain format | `CLEAR` | `STORE` | `UNDEFINED` | `PRESENT_SRC_KHR` |
 | Depth | depth format | `CLEAR` | `DONT_CARE` | `UNDEFINED` | `DEPTH_STENCIL_ATTACHMENT_OPTIMAL` |
 
-Clear values: colour → `{0, 0, 0, 1}` (black), depth → `{1.0, 0}`.
+Clear values: colour → `{0.1, 0.1, 0.1, 1}` (dark grey), depth → `{1.0, 0}`.
 
 ### Recreation on resize
 
@@ -273,7 +273,7 @@ Clear values: colour → `{0, 0, 0, 1}` (black), depth → `{1.0, 0}`.
 - `vkQueuePresentKHR` returns `VK_ERROR_OUT_OF_DATE_KHR` or `VK_SUBOPTIMAL_KHR`, or
 - `VlknWindow::wasWindowResized()` returns `true` at the start of a frame.
 
-The new `VlknSwapChain` is constructed with the old swap chain as a parameter (`std::shared_ptr<VlknSwapChain> previous`), which is passed to `vkCreateSwapchainKHR` as `oldSwapchain`. This allows the driver to reuse resources from the previous swap chain for a faster transition. After construction, the old swap chain is released. If the new and old swap chains have the same image format and depth format, the existing pipelines and render pass remain valid and do not need to be recreated.
+The new `VlknSwapChain` is constructed with the old swap chain as a parameter (`std::shared_ptr<VlknSwapChain> previous`), which is passed to `vkCreateSwapchainKHR` as `oldSwapchain`. This allows the driver to reuse resources from the previous swap chain for a faster transition. After construction, the old swap chain is released. The renderer checks that the new swap chain kept the same image and depth formats, so the existing pipelines and render pass stay valid; if a format changed, it throws instead of rebuilding the pipelines.
 
 ---
 

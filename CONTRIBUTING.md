@@ -64,11 +64,11 @@ cmake --preset=default
 # 4. Build
 cmake --build build
 
-# 5. Run
-./build/vlkn
+# 5. Run (assets are loaded relative to the working directory)
+cd build && ./vlkn
 ```
 
-The `default` preset (defined in `CMakePresets.json`) enables Ninja and a debug build. For an optimised build, pass `-DCMAKE_BUILD_TYPE=Release` to step 3.
+`CMakePresets.json` defines three Ninja presets: `default` (no build type set, validation layers on), `debug` and `release` (optimized, validation layers off). Use `cmake --preset=release` in step 3 for an optimized build.
 
 ### Shader compilation
 
@@ -81,7 +81,7 @@ GLSL shaders in `shaders/` are compiled to SPIR-V automatically as part of the C
 ```
 vlkn/
 ├── CMakeLists.txt          # Main build definition
-├── CMakePresets.json       # Build presets (default = Ninja + Debug)
+├── CMakePresets.json       # Build presets (default, debug, release)
 ├── cmake-imgui/            # ImGui submodule (built separately)
 ├── docs/                   # Architecture and pipeline documentation
 ├── models/                 # OBJ mesh files loaded at runtime
@@ -189,7 +189,7 @@ Keep GPU-facing structs in the file that uses them (`PushConstantData` inside `r
 
 2. **Make your changes**, following the code style guidelines above.
 
-3. **Test locally**: build the project and run `./build/vlkn` to confirm it compiles and runs correctly. The project has no automated test suite; manual verification is expected.
+3. **Test locally**: build the project and run `./vlkn` from the `build/` directory to confirm it compiles and runs correctly. The project has no automated test suite; manual verification is expected.
 
 4. **Commit** with a clear, concise message describing *what* changed and *why*:
    ```

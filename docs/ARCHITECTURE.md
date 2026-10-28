@@ -6,7 +6,7 @@ This document describes the high-level design of **vlkn** — a Vulkan 3D render
 
 ## Overview
 
-vlkn is structured as a set of single-responsibility classes that wrap the Vulkan API at progressively higher levels of abstraction. Each class owns the Vulkan handles it creates and destroys them in its destructor, making lifetime management explicit and leak-free. No global state is used; everything flows through constructor arguments or the `FrameInfo` struct passed to render systems each frame.
+vlkn is structured as a set of single-responsibility classes that wrap the Vulkan API at progressively higher levels of abstraction. Each class owns the Vulkan handles it creates and destroys them in its destructor, making lifetime management explicit. Apart from the input controllers, which keep static state so that GLFW callbacks can reach it, everything flows through constructor arguments or the `FrameInfo` struct passed to render systems each frame.
 
 The application layer (`App`) owns one instance of each major subsystem and drives the main loop. Render systems are stateless workers that receive a `FrameInfo` reference every frame and record draw commands into the active command buffer.
 
@@ -90,11 +90,11 @@ The application layer (`App`) owns one instance of each major subsystem and driv
     │         Input / Camera                 │
     │                                        │
     │  KeyboardMovementController            │
-    │   └─ WASD move, arrow look, ZX roll    │
+    │   └─ WASD/EQ move, ZX roll, lock-on    │
     │  MouseMovementController               │
     │   └─ mouse look, scroll FOV zoom       │
     │  VlknCamera                            │
-    │   └─ YXZ view matrix, perspective proj │
+    │   └─ quaternion view, perspective proj │
     └────────────────────────────────────────┘
 
     ┌────────────────────────────────────────┐
@@ -112,7 +112,7 @@ The application layer (`App`) owns one instance of each major subsystem and driv
 
 ### App (`src/app.hpp`, `src/app.cpp`)
 
-The top-level class that owns every subsystem. Its constructor builds the descriptor pool and descriptor set layout, allocates per-frame UBO buffers, loads textures, writes descriptor sets, and creates the three render systems. The `run()` method is the main loop: it polls GLFW events, runs the fixed-timestep input update at 512 Hz, updates the camera, fills the `GlobalUbo` struct, and drives the renderer's begin/end frame lifecycle. `loadGameObjects()` populates the `VlknGameObject::Map` with the two vases, the floor quad, and sixteen rainbow point lights arranged in a circle.
+The top-level class that owns every subsystem. Its constructor builds the global descriptor pool and loads the scene. `run()` allocates the per-frame UBO buffers, loads the textures, builds the descriptor set layout and descriptor sets, creates the three render systems and then enters the main loop: it polls GLFW events, runs the fixed-timestep input update at 512 Hz, updates the camera, fills the `GlobalUbo` struct, and drives the renderer's begin/end frame lifecycle. `loadGameObjects()` populates the `VlknGameObject::Map` with the two vases, the floor quad, and sixteen rainbow point lights arranged in a circle.
 
 ### VlknWindow (`src/vlkn_window.hpp`, `src/vlkn_window.cpp`)
 
@@ -120,15 +120,15 @@ A thin wrapper around a `GLFWwindow`. Handles window creation, the Vulkan surfac
 
 ### VlknDevice (`src/vlkn_device.hpp`, `src/vlkn_device.cpp`)
 
-Manages the Vulkan instance, debug messenger, physical device selection, logical device, graphics/present queues, command pool, and a single-use command buffer helper for staging operations. Physical device selection prefers a dedicated GPU and verifies required extensions (`VK_KHR_swapchain`) and swap chain support. Validation layers and `VK_EXT_debug_utils` are enabled in debug builds via the `APP_USE_VULKAN_DEBUG_REPORT` define.
+Manages the Vulkan instance, debug messenger, physical device selection, logical device, graphics/present queues, command pool, and a single-use command buffer helper for staging operations. Physical device selection takes the first GPU that has graphics and present queue families, supports `VK_KHR_swapchain` with at least one surface format and present mode, and supports sampler anisotropy. Validation layers and a `VK_EXT_debug_utils` messenger are enabled whenever `NDEBUG` is not defined.
 
 ### VlknSwapChain (`src/vlkn_swap_chain.hpp`, `src/vlkn_swap_chain.cpp`)
 
-Owns the `VkSwapchainKHR`, swap chain images and image views, per-frame depth image/view/memory, the `VkRenderPass`, framebuffers, and all synchronisation objects (two `imageAvailableSemaphores`, two `renderFinishedSemaphores`, per-frame in-flight fences, and per-image fences to prevent presenting an image still being rendered). The constructor accepts an optional `shared_ptr<VlknSwapChain>` for the old swap chain to enable seamless recreation. `MAX_FRAMES_IN_FLIGHT = 2` limits CPU/GPU pipelining to two frames.
+Owns the `VkSwapchainKHR`, swap chain images and image views, a depth image/view/memory per swap chain image, the `VkRenderPass`, framebuffers, and all synchronisation objects (two `imageAvailableSemaphores`, two `renderFinishedSemaphores`, per-frame in-flight fences, and per-image fences to prevent presenting an image still being rendered). The constructor accepts an optional `shared_ptr<VlknSwapChain>` for the old swap chain to enable seamless recreation. `MAX_FRAMES_IN_FLIGHT = 2` limits CPU/GPU pipelining to two frames.
 
 ### VlknRenderer (`src/vlkn_renderer.hpp`, `src/vlkn_renderer.cpp`)
 
-Manages the `VkCommandBuffer` array (one per frame in flight) and owns `VlknSwapChain`. Provides the four-function rendering lifecycle: `beginFrame()` → `beginSwapChainRenderPass()` → (render systems record commands) → `endSwapChainRenderPass()` → `endFrame()`. When `vkAcquireNextImageKHR` or `vkQueuePresentKHR` returns `VK_ERROR_OUT_OF_DATE_KHR` or `VK_SUBOPTIMAL_KHR`, `recreateSwapChain()` is called automatically.
+Manages the `VkCommandBuffer` array (one per frame in flight) and owns `VlknSwapChain`. Provides the four-function rendering lifecycle: `beginFrame()` → `beginSwapChainRenderPass()` → (render systems record commands) → `endSwapChainRenderPass()` → `endFrame()`. `recreateSwapChain()` is called automatically when `vkAcquireNextImageKHR` returns `VK_ERROR_OUT_OF_DATE_KHR`, or when presenting returns `VK_ERROR_OUT_OF_DATE_KHR` / `VK_SUBOPTIMAL_KHR` or the window has been resized.
 
 ### VlknPipeline (`src/vlkn_pipeline.hpp`, `src/vlkn_pipeline.cpp`)
 
@@ -144,7 +144,7 @@ Creates the point light billboard pipeline (`point_light.vert/frag`) with alpha 
 
 ### ImGuiSystem (`src/systems/imgui_system.hpp`, `src/systems/imgui_system.cpp`)
 
-Initialises ImGui for Vulkan using the helper from the `cmake-imgui` submodule (built and installed separately). Exposes `update()` to build the ImGui frame (camera rotation angles, point light colour picker) and `render()` to record the ImGui draw data into the command buffer. The colour returned by `getPointLightColor()` is consumed by both the `PointLightSystem` update and render calls.
+Initialises ImGui for Vulkan using the helper from the `cmake-imgui` submodule (built and installed separately). Exposes `update()` to build the ImGui frame (frame time and FPS, camera rotation angles, point light colour picker) and `render()` to record the ImGui draw data into the command buffer. The colour returned by `getPointLightColor()` is consumed by both the `PointLightSystem` update and render calls.
 
 ### VlknDescriptors (`src/vlkn_descriptors.hpp`, `src/vlkn_descriptors.cpp`)
 
@@ -160,23 +160,23 @@ Loads OBJ files using `tinyobjloader`. Vertices are deduplicated using an `std::
 
 ### VlknBuffer (`src/vlkn_buffer.hpp`, `src/vlkn_buffer.cpp`)
 
-A general-purpose GPU buffer wrapper. Supports persistent mapping (`map()`/`unmap()`), writing (`writeToBuffer()`), flushing non-coherent memory ranges (`flush()`), and generating a `VkDescriptorBufferInfo` for descriptor set writes. The alignment calculation for uniform buffers uses the device's `minUniformBufferOffsetAlignment`.
+A general-purpose GPU buffer wrapper. Supports persistent mapping (`map()`/`unmap()`), writing (`writeToBuffer()`), flushing non-coherent memory ranges (`flush()`), and generating a `VkDescriptorBufferInfo` for descriptor set writes. An optional `minOffsetAlignment` constructor argument pads each instance in buffers that hold several instances (for example to `minUniformBufferOffsetAlignment`); the per-frame UBOs use one buffer per frame and leave it at the default.
 
 ### VlknImage (`src/vlkn_image.hpp`, `src/vlkn_image.cpp`)
 
-Loads JPEG/PNG images from disk using `stb_image`, uploads them via a staging buffer, generates mipmaps with `vkCmdBlitImage`, and creates a `VkImageView` and `VkSampler` with anisotropic filtering. Also provides `createEmptyImage()` for placeholder slots in the texture array. Handles image layout transitions via pipeline barriers.
+Loads images from disk with `stb_image` (converted to RGBA8), uploads them through a staging buffer into a device-local `VK_FORMAT_R8G8B8A8_SRGB` image with a single mip level, and creates a `VkImageView` and a linear-filtering `VkSampler` with anisotropy set to the device maximum. Also provides `createEmptyImage()` (a 1×1 white texture) for slot 0 of the texture array. Handles image layout transitions via pipeline barriers.
 
 ### VlknCamera (`src/vlkn_camera.hpp`, `src/vlkn_camera.cpp`)
 
-Provides `setViewYXZ()` (builds the view matrix from a translation and YXZ Euler rotation) and `setPerspectiveProjection()` (standard perspective matrix with Y flipped for Vulkan's coordinate system). Also exposes `getPosition()` (derived from the inverse view matrix) for distance-sorted light rendering.
+Provides `setViewYXZ()` (despite its legacy name, it builds the view matrix from a translation and a quaternion orientation) and `setPerspectiveProjection()` (`glm::perspective` with a [0, 1] depth range via `GLM_FORCE_DEPTH_ZERO_TO_ONE`). Also exposes `getPosition()` (derived from the inverse view matrix) for distance-sorted light rendering.
 
 ### KeyboardMovementController / MouseMovementController
 
-`KeyboardMovementController` maps GLFW key states to camera translation and rotation deltas applied at a fixed tick rate. It also implements a "look at nearest object" feature triggered by a key press. `MouseMovementController` computes yaw/pitch from raw mouse delta and adjusts the field of view with the scroll wheel.
+`KeyboardMovementController` maps GLFW key states to camera translation and roll applied at the fixed tick rate. Number keys 1–8 turn the camera to face the game object with the matching ID (`glm::quatLookAt`), and `C` toggles between camera control and a free cursor for the ImGui overlay. `MouseMovementController` applies yaw and pitch quaternions from the raw mouse delta once per frame and adjusts the field of view with the scroll wheel.
 
 ### VlknGameObject / TransformComponent (`src/vlkn_game_object.hpp`)
 
-`VlknGameObject` is a simple entity with an auto-incremented integer ID, an optional shared `VlknModel`, a `TransformComponent` (translation, rotation, scale), an optional `PointLightComponent`, a colour, and a texture index (`imgIdx`). `TransformComponent::mat4()` builds the TRS matrix and `normalMatrix()` returns the transpose-inverse for correct normal transformation.
+`VlknGameObject` is a simple entity with an auto-incremented integer ID, an optional shared `VlknModel`, a `TransformComponent` (translation, quaternion rotation, scale), an optional `PointLightComponent`, a colour, and a texture index (`imgIdx`). `TransformComponent::mat4()` builds the TRS matrix and `normalMatrix()` returns the transpose-inverse for correct normal transformation.
 
 ---
 
@@ -250,10 +250,10 @@ A single frame proceeds as follows:
 All draw calls (geometry, point lights, ImGui) share one `VkRenderPass` with a single subpass. Separate `VkPipeline` objects handle the different shading requirements (textured Blinn-Phong vs. billboard quads vs. ImGui). This avoids subpass dependencies and keeps synchronisation simple.
 
 **Push constants for per-object data**
-Per-object model matrix, normal matrix, and texture index are delivered via push constants rather than a per-object UBO or dynamic descriptor. Push constants have the lowest latency of any Vulkan data-upload mechanism and require no buffer management for small per-draw payloads.
+Per-object model matrix, normal matrix, and texture index are delivered via push constants rather than a per-object UBO or dynamic descriptor. For small per-draw payloads they need no buffer management or descriptor updates.
 
 **Global UBO for shared per-frame data**
-Projection/view matrices and the full point light array are written once per frame into a host-visible, persistently-mapped `VlknBuffer` and bound as a single descriptor set that all pipelines share. This avoids rebinding descriptors between draw calls.
+Projection/view matrices and the full point light array are written once per frame into a host-visible, persistently-mapped `VlknBuffer` and bound as a single descriptor set that both render systems share. Each system binds it once per pipeline, not per draw call.
 
 **Staging buffers for GPU-local resources**
 Vertex buffers, index buffers, and textures are first written into a host-visible staging buffer and then transferred to `VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT` memory for optimal GPU access. The staging buffer is destroyed immediately after the transfer.
@@ -262,7 +262,7 @@ Vertex buffers, index buffers, and textures are first written into a host-visibl
 Two command buffers, two UBO buffers, and two descriptor sets are maintained so the CPU can record frame N+1 while the GPU renders frame N, without stalling.
 
 **Fixed-timestep input at 512 Hz**
-Camera movement is decoupled from frame rate using a standard accumulator loop. This gives deterministic, frame-rate-independent movement without requiring the render loop to run at a fixed rate.
+Keyboard camera movement is decoupled from frame rate using a standard accumulator loop. This gives deterministic, frame-rate-independent movement without requiring the render loop to run at a fixed rate.
 
 **RAII ownership throughout**
 Every Vulkan handle is owned by a C++ object. Constructors acquire resources, destructors release them. `std::unique_ptr` and `std::shared_ptr` are used for heap-allocated subsystems (`VlknSwapChain`, `VlknPipeline`, `VlknModel`). Copy constructors and copy assignment operators are deleted on all resource-owning classes.
